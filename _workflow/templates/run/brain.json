@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "",
+  "runId": "",
+  "workflow": {
+    "currentStage": "",
+    "completedStages": [],
+    "nextStage": "",
+    "status": ""
+  },
+  "goals": [],
+  "requirements": [],
+  "constraints": [],
+  "architectureDecisions": [],
+  "technicalDecisions": [],
+  "domainKnowledge": [],
+  "openQuestions": [],
+  "risks": [],
+  "artifacts": [],
+  "workflowHistory": [],
+  "custom": {},
+  "changeLog": []
+}

@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "",
+  "builtIn": [
+    "goals",
+    "requirements",
+    "constraints",
+    "architectureDecisions",
+    "technicalDecisions",
+    "domainKnowledge",
+    "openQuestions",
+    "risks",
+    "artifacts",
+    "workflowHistory",
+    "changeLog"
+  ],
+  "customNamespace": "custom",
+  "custom": {},
+  "memoryItemSchema": {
+    "id": "",
+    "text": "",
+    "status": "active",
+    "confidence": 0,
+    "source": {
+      "runId": "",
+      "artifact": "",
+      "conversation": "workflow"
+    },
+    "createdAt": "",
+    "updatedAt": "",
+    "supersedes": [],
+    "history": []
+  },
+  "allowedStatuses": [
+    "active",
+    "superseded",
+    "archived",
+    "conflict"
+  ],
+  "allowedConversationSources": [
+    "user",
+    "assistant",
+    "workflow"
+  ]
+}

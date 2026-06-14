@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "",
+  "conflicts": [],
+  "conflictRecordSchema": {
+    "id": "",
+    "status": "open",
+    "category": "",
+    "existingItemIds": [],
+    "incomingItemId": "",
+    "detectedAt": "",
+    "source": {
+      "runId": "",
+      "artifact": "",
+      "conversation": "workflow"
+    },
+    "summary": "",
+    "resolution": "",
+    "resolvedBy": "",
+    "resolvedAt": "",
+    "history": []
+  },
+  "allowedStatuses": [
+    "open",
+    "resolved",
+    "needs-human-review"
+  ]
+}
