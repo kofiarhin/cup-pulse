@@ -44,36 +44,38 @@ Negative:
 
 ## Decisions
 
-### ADR-001: `<Decision title>`
+### ADR-001: Separate web and ingestion worker processes
 
-Date: `<YYYY-MM-DD>`
+Date: 2026-06-14
 
-Status: `<Proposed>`
+Status: Accepted
 
 #### Context
 
-`<Context>`
+Provider synchronization must not duplicate across horizontally scaled API processes or delay public reads.
 
 #### Decision
 
-`<Decision>`
+Run Express as a read-only Heroku web process and Sportmonks synchronization as a separate worker. Use expiring MongoDB locks for every scheduled job.
 
 #### Alternatives Considered
 
-1. `<Alternative>`
-   - Pros: `<Pros>`
-   - Cons: `<Cons>`
+1. Run timers inside Express.
+   - Pros: Fewer process types.
+   - Cons: Duplicate jobs, coupled failures, and unpredictable dyno restarts.
 
 #### Consequences
 
 Positive:
 
-- `<Positive consequence>`
+- API scaling is independent from provider ingestion.
+- Cached reads continue when Sportmonks is unavailable.
 
 Negative:
 
-- `<Negative consequence>`
+- Production requires a continuously running worker dyno.
 
 #### Implementation Notes
 
-- `<Implementation note>`
+- Process commands are defined in `Procfile`.
+- Refresh intervals and lock TTL are environment-configurable.

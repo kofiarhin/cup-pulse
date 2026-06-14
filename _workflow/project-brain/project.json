@@ -1,22 +1,227 @@
 {
   "version": "1.0.0",
-  "updatedAt": "",
+  "updatedAt": "2026-06-14T05:27:03+01:00",
   "workflow": {
-    "currentStage": "",
-    "completedStages": [],
-    "nextStage": "",
-    "status": ""
+    "currentStage": "complete",
+    "completedStages": [
+      "intake",
+      "spec",
+      "planning",
+      "implementation",
+      "verification",
+      "review",
+      "fallow-quality",
+      "release-notes",
+      "summary"
+    ],
+    "nextStage": "deployment-smoke",
+    "status": "complete"
   },
-  "goals": [],
-  "requirements": [],
-  "constraints": [],
-  "architectureDecisions": [],
-  "technicalDecisions": [],
-  "domainKnowledge": [],
+  "goals": [
+    {
+      "id": "goal-project-001",
+      "text": "Build CupPulse as a public 2026 FIFA Men's World Cup companion powered by Sportmonks and MongoDB Atlas.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/request.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "requirements": [
+    {
+      "id": "req-project-001",
+      "text": "The production MVP uses real Sportmonks World Cup data cached in normalized MongoDB collections and exposes it through CupPulse /api/v1 endpoints.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/spec.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-project-001",
+      "text": "Mock data is only a development or explicitly enabled outage fallback; paid AI/prediction APIs and user account features are excluded.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/spec.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "architectureDecisions": [
+    {
+      "id": "arch-project-001",
+      "text": "Deploy separate Heroku web and worker processes; only the worker performs Sportmonks synchronization and MongoDB locks guard refresh jobs.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/handoff.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "technicalDecisions": [
+    {
+      "id": "tech-project-001",
+      "text": "Use deterministic team/player-form predictions and template-based structured match summaries with source fingerprints.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/spec.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "domainKnowledge": [
+    {
+      "id": "domain-project-001",
+      "text": "CupPulse targets the 2026 FIFA Men's World Cup finals and must represent provider-unavailable data explicitly rather than inventing it.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/spec.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
   "openQuestions": [],
-  "risks": [],
-  "artifacts": [],
-  "workflowHistory": [],
+  "risks": [
+    {
+      "id": "risk-project-001",
+      "text": "Sportmonks subscription coverage and pre-tournament field availability may require nullable fields and adaptive includes.",
+      "status": "active",
+      "confidence": 0.9,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/spec.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "artifact-project-001",
+      "text": "Active production MVP specification: _workflow/runs/dev/spec.md",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/spec.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": []
+    },
+    {
+      "id": "artifact-project-002",
+      "text": "Completed production MVP workflow summary: _workflow/runs/dev/summary.md",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/summary.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T05:27:03+01:00",
+      "updatedAt": "2026-06-14T05:27:03+01:00",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "workflowHistory": [
+    {
+      "id": "workflow-project-001",
+      "text": "The dev run completed intake and saved its spec; planning is blocked on explicit approval.",
+      "status": "superseded",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/handoff.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T04:24:48+01:00",
+      "updatedAt": "2026-06-14T04:24:48+01:00",
+      "supersedes": [],
+      "history": [
+        {
+          "timestamp": "2026-06-14T05:27:03+01:00",
+          "status": "superseded",
+          "reason": "The approved workflow completed."
+        }
+      ]
+    },
+    {
+      "id": "workflow-project-002",
+      "text": "The dev run completed all seven tasks with passing tests, lint, and build; credentialed deployment smoke remains external.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "dev",
+        "artifact": "_workflow/runs/dev/summary.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T05:27:03+01:00",
+      "updatedAt": "2026-06-14T05:27:03+01:00",
+      "supersedes": [
+        "workflow-project-001"
+      ],
+      "history": []
+    }
+  ],
   "custom": {},
-  "changeLog": []
+  "changeLog": [
+    {
+      "timestamp": "2026-06-14T04:24:48+01:00",
+      "runId": "dev",
+      "event": "spec-saved",
+      "summary": "Initialized durable CupPulse product memory and recorded the production MVP specification."
+    },
+    {
+      "timestamp": "2026-06-14T05:27:03+01:00",
+      "runId": "dev",
+      "event": "workflow-complete",
+      "summary": "Completed the public real-data MVP foundation and all required quality artifacts."
+    }
+  ]
 }

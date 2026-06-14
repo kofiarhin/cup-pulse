@@ -1,5 +1,32 @@
 {
   "version": "1.0.0",
-  "updatedAt": "",
-  "events": []
+  "updatedAt": "2026-06-14T05:27:03+01:00",
+  "events": [
+    {
+      "id": "history-20260614-dev-001",
+      "timestamp": "2026-06-14T04:24:48+01:00",
+      "runId": "dev",
+      "event": "intake-and-spec-saved",
+      "summary": "Recorded real-data MVP scope, architecture, constraints, risks, and the pending spec approval gate.",
+      "artifacts": [
+        "_workflow/runs/dev/request.md",
+        "_workflow/runs/dev/handoff.md",
+        "_workflow/runs/dev/spec.md"
+      ]
+    },
+    {
+      "id": "history-20260614-dev-002",
+      "timestamp": "2026-06-14T05:27:03+01:00",
+      "runId": "dev",
+      "event": "workflow-complete",
+      "summary": "Completed all seven approved implementation tasks and final verification, review, Fallow, release, and summary gates.",
+      "artifacts": [
+        "_workflow/runs/dev/verification.md",
+        "_workflow/runs/dev/review.md",
+        ".workflow/fallow-audit.md",
+        "_workflow/runs/dev/release-notes.md",
+        "_workflow/runs/dev/summary.md"
+      ]
+    }
+  ]
 }
