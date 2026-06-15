@@ -36,6 +36,11 @@ function loadConfig(environment = process.env) {
     port: parsePositiveInteger(environment.PORT, 5000),
     clientUrl: environment.CLIENT_URL || "http://localhost:5173",
     mongodbUri: environment.MONGODB_URI || "",
+    adminApiToken: environment.ADMIN_API_TOKEN || "",
+    realtimePollIntervalMs: parsePositiveInteger(
+      environment.REALTIME_POLL_INTERVAL_MS,
+      2000,
+    ),
     sportmonksApiToken,
     sportmonksBaseUrl:
       environment.SPORTMONKS_BASE_URL ||

@@ -44,4 +44,4 @@
 
 - Sportmonks subscription coverage controls advanced data availability.
 - Missing lineups, injuries, xG, and advanced player metrics must remain explicit.
-- Socket.IO, admin tools, authentication, and personalization are out of scope.
+- Socket.IO cache invalidation and bearer-token admin operations are included in the MVP; end-user authentication and personalization remain out of scope.

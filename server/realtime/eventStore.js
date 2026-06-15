@@ -1,0 +1,5 @@
+const { RealtimeEvent } = require("../models");
+const { createEventPayload } = require("./events");
+async function persistRealtimeEvent(eventName, payload = {}) { const event = createEventPayload(eventName, payload); await RealtimeEvent.create({ id: `event-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, ...event, emittedAt: new Date(event.emittedAt), source: "cached", syncedAt: new Date() }); return event; }
+function startRealtimeEventPoller({ emit, intervalMs = 2000, model = RealtimeEvent }) { let cursor = new Date(); let stopped = false; const poll = async () => { if (stopped) return; try { const events = await model.find({ emittedAt: { $gt: cursor } }).sort({ emittedAt: 1 }).limit(100).lean(); for (const event of events) { cursor = new Date(event.emittedAt); emit(event.type, event); } } catch (error) { console.error("Realtime event poll failed:", error.message); } }; const timer = setInterval(poll, intervalMs); timer.unref?.(); return () => { stopped = true; clearInterval(timer); }; }
+module.exports = { persistRealtimeEvent, startRealtimeEventPoller };

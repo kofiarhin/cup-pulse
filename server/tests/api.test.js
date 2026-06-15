@@ -16,6 +16,7 @@ function createTestApp() {
 
 const collectionRoutes = [
   "/api/v1/competitions",
+  "/api/v1/groups",
   "/api/v1/teams",
   "/api/v1/players",
   "/api/v1/fixtures",
@@ -23,6 +24,8 @@ const collectionRoutes = [
   "/api/v1/matches/live",
   "/api/v1/standings",
   "/api/v1/venues",
+  "/api/v1/predictions",
+  "/api/v1/summaries",
 ];
 
 test("every required collection endpoint returns a normalized envelope", async () => {
@@ -105,6 +108,42 @@ test("detail endpoints return normalized records", async () => {
     .get("/api/v1/matches/development-fallback-match")
     .expect(200);
   assert.equal(match.body.data.competitionId, "fifa-world-cup-2026");
+
+  const group = await request(app)
+    .get("/api/v1/groups/fifa-world-cup-2026-group-a")
+    .expect(200);
+  assert.equal(group.body.data.code, "A");
+});
+
+test("admin routes fail closed without a configured or valid token", async () => {
+  const app = createTestApp();
+  const missing = await request(app).get("/api/v1/admin/health").expect(401);
+  assert.equal(missing.body.error.code, "ADMIN_UNAUTHORIZED");
+
+  const configured = createApp({
+    config: {
+      clientUrl: "http://localhost:5173",
+      allowMockData: true,
+      adminApiToken: "test-secret",
+    },
+    readiness: () => ({ database: "disconnected" }),
+  });
+  await request(configured)
+    .get("/api/v1/admin/health")
+    .set("Authorization", "Bearer wrong")
+    .expect(401);
+});
+
+test("public editorial routes return only public envelopes", async () => {
+  const app = createTestApp();
+  const announcements = await request(app)
+    .get("/api/v1/announcements")
+    .expect(200);
+  const featured = await request(app)
+    .get("/api/v1/featured-content")
+    .expect(200);
+  assert.equal(announcements.body.data[0].active, true);
+  assert.equal(featured.body.data[0].type, "match");
 });
 
 test("missing detail records return ENTITY_NOT_FOUND", async () => {

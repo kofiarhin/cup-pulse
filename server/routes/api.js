@@ -11,12 +11,15 @@ function createApiRouter(dataService) {
 
   const collections = [
     "competitions",
+    "groups",
     "teams",
     "players",
     "fixtures",
     "matches",
     "standings",
     "venues",
+    "predictions",
+    "summaries",
   ];
 
   for (const collection of collections) {
@@ -40,6 +43,7 @@ function createApiRouter(dataService) {
   );
 
   const details = [
+    ["groups", "Group"],
     ["teams", "Team"],
     ["players", "Player"],
     ["matches", "Match"],

@@ -1,6 +1,7 @@
 const defaultModels = require("../models");
 const {
   normalizeFixture,
+  normalizeGroups,
   normalizePlayer,
   normalizeStanding,
   normalizeTeam,
@@ -30,6 +31,7 @@ function createSyncService({
   const {
     Competition,
     Fixture,
+    Group,
     Match,
     Player,
     Standing,
@@ -127,6 +129,7 @@ function createSyncService({
         Standing,
         standings.map((item) => normalizeStanding(item, competitionId)),
       );
+      await upsertMany(Group, normalizeGroups(standings, competitionId));
       await refreshDerived();
     });
   }

@@ -1,0 +1,3 @@
+# Active Request: CupPulse PRD Completion
+
+Bring the repository into full alignment with `CupPulse_PRD.md` in complete-workflow mode. Add Socket.IO realtime updates with MongoDB-backed cross-process notification support; token-protected admin health, sync, announcement, and featured-content APIs and responsive UI; groups collection/API/UI/sync support; prediction and summary list/detail exposure; complete Sportmonks collection and derived-generation coverage; mobile-first public/admin polish; and comprehensive backend/frontend coverage. Preserve all existing routes, APIs, mock fallback behavior, tests, lint, and build. Do not add paid AI APIs, Redis, end-user accounts, Redux without demonstrated need, or unrelated redesign. `npm run verify` must pass.
