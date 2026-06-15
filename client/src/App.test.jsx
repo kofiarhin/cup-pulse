@@ -20,6 +20,7 @@ function renderRoute(route) {
 
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
   vi.restoreAllMocks();
 });
 
@@ -172,5 +173,26 @@ describe("CupPulse public routes", () => {
     expect(
       await screen.findByRole("region", { name: "Canada squad" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("CupPulse admin routes", () => {
+  it("renders the session-only admin login", () => {
+    renderRoute("/admin");
+    expect(screen.getByRole("heading", { name: "Admin access" })).toBeInTheDocument();
+    expect(screen.getByLabelText("API token")).toHaveAttribute("type", "password");
+    expect(screen.getByText(/browser session only/i)).toBeInTheDocument();
+  });
+
+  it("renders protected health when an admin token exists", async () => {
+    sessionStorage.setItem("cup-pulse-admin-token", "test-token");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: { api: "ok", database: "connected", serverTime: "2026-06-14T00:00:00Z" },
+      }),
+    });
+    renderRoute("/admin/health");
+    expect(await screen.findByRole("heading", { name: "System health" })).toBeInTheDocument();
   });
 });

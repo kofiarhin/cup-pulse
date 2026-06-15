@@ -4,6 +4,7 @@ const options = {
   timestamps: true,
   minimize: false,
   versionKey: false,
+  suppressReservedKeysWarning: true,
 };
 
 const sourceFields = {
@@ -41,6 +42,46 @@ const Competition = createModel("Competition", "competitions", {
   status: String,
   stages: [mongoose.Schema.Types.Mixed],
 });
+
+const Group = createModel("Group", "groups", {
+  competitionId: { type: String, index: true },
+  name: { type: String, required: true },
+  code: { type: String, index: true },
+  stage: String,
+  teamIds: [{ type: String }],
+  standings: [mongoose.Schema.Types.Mixed],
+});
+
+const Announcement = createModel("Announcement", "announcements", {
+  title: { type: String, required: true },
+  message: { type: String, required: true },
+  severity: { type: String, enum: ["info", "warning", "critical"], default: "info" },
+  active: { type: Boolean, default: true, index: true },
+  startsAt: { type: Date, index: true },
+  endsAt: { type: Date, index: true },
+  createdBy: String,
+});
+
+const FeaturedContent = createModel("FeaturedContent", "featuredcontent", {
+  title: { type: String, required: true },
+  description: String,
+  type: { type: String, enum: ["match", "team", "player", "article", "external"], required: true },
+  targetId: String,
+  href: String,
+  imageUrl: String,
+  priority: { type: Number, default: 0, index: true },
+  active: { type: Boolean, default: true, index: true },
+  startsAt: { type: Date, index: true },
+  endsAt: { type: Date, index: true },
+});
+
+const RealtimeEvent = createModel("RealtimeEvent", "realtimeevents", {
+  type: { type: String, required: true, index: true },
+  collection: { type: String, required: true },
+  ids: [{ type: String }],
+  scope: String,
+  emittedAt: { type: Date, required: true, index: true },
+}, [[{ emittedAt: 1 }, { expireAfterSeconds: 86400 }]]);
 
 const Team = createModel(
   "Team",
@@ -170,6 +211,7 @@ const JobLock = createModel("JobLock", "joblocks", {
 
 const models = {
   competitions: Competition,
+  groups: Group,
   teams: Team,
   players: Player,
   fixtures: Fixture,
@@ -178,15 +220,21 @@ const models = {
   venues: Venue,
   predictions: Prediction,
   summaries: Summary,
+  announcements: Announcement,
+  "featured-content": FeaturedContent,
 };
 
 module.exports = {
+  Announcement,
   Competition,
+  FeaturedContent,
   Fixture,
+  Group,
   JobLock,
   Match,
   Player,
   Prediction,
+  RealtimeEvent,
   Standing,
   Summary,
   SyncState,

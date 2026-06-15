@@ -3,6 +3,7 @@ const cors = require("cors");
 const { errorHandler, routeNotFound } = require("./middleware/errors");
 const { createApiRouter } = require("./routes/api");
 const { createDataService } = require("./services/dataService");
+const { createAdminRouter, createPublicContentRouter } = require("./routes/admin");
 
 function createApp({
   config = { clientUrl: "http://localhost:5173" },
@@ -80,6 +81,11 @@ function createApp({
     allowMockData: config.allowMockData,
     databaseStatus: () => readiness().database,
   });
+  app.use("/api/v1", createPublicContentRouter({
+    readiness,
+    allowMockData: config.allowMockData,
+  }));
+  app.use("/api/v1/admin", createAdminRouter({ config, readiness }));
   app.use("/api/v1", createApiRouter(dataService));
 
   app.use(routeNotFound);

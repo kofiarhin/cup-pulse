@@ -28,6 +28,7 @@ const { generatePrediction } = require("./services/predictions/engine");
 const { generateMatchSummary } = require("./services/summaries/engine");
 const { createLockService } = require("./sync/lockService");
 const { createSyncService } = require("./sync/syncService");
+const { persistRealtimeEvent } = require("./realtime/eventStore");
 
 async function startWorker() {
   const config = loadConfig();
@@ -65,7 +66,18 @@ async function startWorker() {
     ...contextLoader,
     derivedService,
   });
-  const sync = createSyncService({ client, config, refreshDerived });
+  const syncBase = createSyncService({ client, config, refreshDerived });
+  const notify = (name, collection, scope) => async (operation) => {
+    const result = await operation();
+    await persistRealtimeEvent(name, { collection, scope });
+    await persistRealtimeEvent("sync:updated", { collection: "syncstates", scope });
+    return result;
+  };
+  const sync = {
+    syncStatic: () => notify("sync:updated", "competitions", "static")(syncBase.syncStatic),
+    syncCore: () => notify("standings:updated", "standings", "core")(syncBase.syncCore),
+    syncFixtures: (options) => notify("matches:updated", "matches", options?.detailed ? "live" : "fixtures")(() => syncBase.syncFixtures(options)),
+  };
   const locks = createLockService({ lockModel: JobLock });
   const jobs = {
     static: () =>

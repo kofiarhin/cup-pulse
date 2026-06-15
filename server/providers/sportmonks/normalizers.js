@@ -133,6 +133,39 @@ function normalizeStanding(standing, competitionId) {
   };
 }
 
+function normalizeGroups(standings, competitionId) {
+  const groups = new Map();
+  for (const standing of standings) {
+    const code = String(
+      standing.group?.code ||
+        standing.group?.name ||
+        standing.group_id ||
+        "unassigned",
+    )
+      .replace(/^group\s+/i, "")
+      .toUpperCase();
+    const id = `${competitionId}-group-${code.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    const current = groups.get(id) || {
+      id,
+      providerId: standing.group_id,
+      competitionId,
+      name: standing.group?.name || `Group ${code}`,
+      code,
+      stage: standing.stage?.name || "Group stage",
+      teamIds: [],
+      standings: [],
+      source: "cached",
+      providerUpdatedAt: standing.updated_at ? new Date(standing.updated_at) : null,
+      syncedAt: new Date(),
+    };
+    const teamId = providerId("team", standing.participant_id);
+    if (teamId && !current.teamIds.includes(teamId)) current.teamIds.push(teamId);
+    current.standings.push(normalizeStanding(standing, competitionId));
+    groups.set(id, current);
+  }
+  return [...groups.values()];
+}
+
 function normalizeVenue(venue) {
   return {
     id: providerId("venue", venue.id),
@@ -154,6 +187,7 @@ function normalizeVenue(venue) {
 
 module.exports = {
   normalizeFixture,
+  normalizeGroups,
   normalizePlayer,
   normalizeScore,
   normalizeStanding,

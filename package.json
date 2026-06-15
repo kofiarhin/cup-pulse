@@ -4,7 +4,7 @@
   "description": "Public World Cup companion powered by Sportmonks and MongoDB caching",
   "main": "index.js",
   "scripts": {
-    "test": "node --test \"server/tests/*.test.js\"",
+    "test": "node --test server/tests/*.test.js",
     "test:client": "npm test --prefix client",
     "test:all": "npm test && npm run test:client",
     "lint": "npm run lint --prefix client",
@@ -23,7 +23,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.7.0"
+    "mongoose": "^9.7.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "concurrently": "^10.0.3",

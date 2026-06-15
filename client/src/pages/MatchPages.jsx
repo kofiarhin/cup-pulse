@@ -79,9 +79,21 @@ function MatchCollectionPage({
 export function HomePage() {
   const live = useCupData("home-live", "/matches/live?limit=4");
   const fixtures = useCupData("home-fixtures", "/fixtures?limit=4");
+  const announcements = useCupData("announcements", "/announcements");
+  const featured = useCupData("featured-content", "/featured-content");
   const meta = live.data?.meta || fixtures.data?.meta;
   return (
     <div>
+      {announcements.data?.data?.length > 0 && (
+        <section aria-label="Announcements" className="mb-8 divide-y divide-white/10 border-y border-white/10">
+          {announcements.data.data.map((item) => (
+            <div key={item.id} className="grid gap-2 py-4 sm:grid-cols-[12rem_1fr]">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-lime-300">{item.title}</p>
+              <p className="text-sm leading-6 text-stone-300">{item.message}</p>
+            </div>
+          ))}
+        </section>
+      )}
       <section className="grid min-h-[30rem] items-end gap-10 border-b border-white/10 pb-10 lg:grid-cols-[1.5fr_0.7fr] lg:pb-14">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-lime-300">CupPulse / 2026</p>
@@ -116,6 +128,19 @@ export function HomePage() {
           {fixtures.isLoading ? <LoadingState rows={2} /> : fixtures.data?.data?.length ? <MatchList matches={fixtures.data.data} /> : <EmptyState title="Fixtures pending" />}
         </div>
       </section>
+      {featured.data?.data?.length > 0 && (
+        <section className="border-t border-white/10 py-10">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-lime-300">Featured</p>
+          <div className="mt-5 grid gap-px bg-white/10 md:grid-cols-[1.4fr_1fr]">
+            {featured.data.data.map((item) => (
+              <Link key={item.id} to={item.href || "/"} className="bg-stone-950 p-6 hover:bg-white/[0.035]">
+                <h2 className="text-xl font-black">{item.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-stone-400">{item.description}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

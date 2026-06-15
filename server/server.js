@@ -1,4 +1,5 @@
 require("dotenv").config();
+const http = require("http");
 const { createApp } = require("./app");
 const { loadConfig } = require("./config/env");
 const {
@@ -6,6 +7,11 @@ const {
   disconnectDatabase,
   getDatabaseStatus,
 } = require("./config/database");
+const {
+  createRealtimeServer,
+  emitRealtimeEvent,
+} = require("./realtime/socket");
+const { startRealtimeEventPoller } = require("./realtime/eventStore");
 
 async function startServer() {
   const config = loadConfig();
@@ -20,12 +26,21 @@ async function startServer() {
     config,
     readiness: () => ({ database: getDatabaseStatus() }),
   });
-  const server = app.listen(config.port, () => {
+  const server = http.createServer(app);
+  createRealtimeServer(server, config);
+  const stopRealtimePoller = config.mongodbUri
+    ? startRealtimeEventPoller({
+        emit: emitRealtimeEvent,
+        intervalMs: config.realtimePollIntervalMs,
+      })
+    : () => {};
+  server.listen(config.port, () => {
     console.log(`CupPulse API listening on port ${config.port}`);
   });
 
   async function shutdown(signal) {
     console.log(`Received ${signal}; shutting down`);
+    stopRealtimePoller();
     server.close(async () => {
       await disconnectDatabase();
       process.exit(0);

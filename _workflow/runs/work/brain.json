@@ -1,0 +1,161 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-06-14T00:00:00Z",
+  "runId": "work",
+  "workflow": {
+    "currentStage": "spec-approval",
+    "completedStages": [
+      "intake",
+      "spec"
+    ],
+    "nextStage": "planning",
+    "status": "blocked-on-approval"
+  },
+  "goals": [
+    {
+      "id": "goal-work-001",
+      "text": "Bring CupPulse into full alignment with CupPulse_PRD.md without regressing current public behavior.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/request.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "requirements": [
+    {
+      "id": "req-work-001",
+      "text": "Implement realtime, admin, groups, collection exposure, complete sync/derived coverage, mobile polish, and PRD tests.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/spec.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "constraints": [
+    {
+      "id": "constraint-work-001",
+      "text": "Do not add paid AI, Redis, user accounts, unnecessary Redux, or unrelated redesign; npm run verify must pass.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/request.md",
+        "conversation": "user"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "architectureDecisions": [
+    {
+      "id": "arch-work-001",
+      "text": "Use MongoDB persisted events plus API polling to bridge separate Heroku worker and web processes to Socket.IO clients.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/spec.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "technicalDecisions": [
+    {
+      "id": "tech-work-001",
+      "text": "Keep TanStack Query for server state, sessionStorage for the admin token, and Node test runner for backend convention.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/spec.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "domainKnowledge": [],
+  "openQuestions": [],
+  "risks": [
+    {
+      "id": "risk-work-001",
+      "text": "Cross-process realtime delivery, provider schema variability, and broad compatibility coverage are the primary implementation risks.",
+      "status": "active",
+      "confidence": 0.9,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/spec.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "artifact-work-001",
+      "text": "Active PRD completion spec: _workflow/runs/work/spec.md",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/spec.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "workflowHistory": [
+    {
+      "id": "workflow-work-001",
+      "text": "Intake and detailed spec are complete; planning is blocked on explicit approval.",
+      "status": "active",
+      "confidence": 1,
+      "source": {
+        "runId": "work",
+        "artifact": "_workflow/runs/work/handoff.md",
+        "conversation": "workflow"
+      },
+      "createdAt": "2026-06-14T00:00:00Z",
+      "updatedAt": "2026-06-14T00:00:00Z",
+      "supersedes": [],
+      "history": []
+    }
+  ],
+  "custom": {},
+  "changeLog": [
+    {
+      "timestamp": "2026-06-14T00:00:00Z",
+      "runId": "work",
+      "event": "spec-saved",
+      "summary": "Initialized PRD completion run and saved approval-gated spec."
+    }
+  ]
+}

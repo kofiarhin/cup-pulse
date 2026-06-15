@@ -88,6 +88,18 @@ const mockData = Object.freeze({
     },
   ],
   standings: [],
+  groups: [
+    {
+      id: "fifa-world-cup-2026-group-a",
+      competitionId: "fifa-world-cup-2026",
+      name: "Group A",
+      code: "A",
+      stage: "Group stage",
+      teamIds: ["mexico", "canada"],
+      standings: [],
+      isFallback: true,
+    },
+  ],
   venues: [
     {
       id: "estadio-azteca",
@@ -122,6 +134,27 @@ const mockData = Object.freeze({
       message: "Match summary will be available after full time.",
       sections: [],
       isFallback: true,
+    },
+  ],
+  announcements: [
+    {
+      id: "development-announcement",
+      title: "Tournament data preview",
+      message: "CupPulse is showing development fallback data until provider synchronization completes.",
+      severity: "info",
+      active: true,
+    },
+  ],
+  "featured-content": [
+    {
+      id: "development-feature",
+      title: "Opening match",
+      description: "Track the next confirmed World Cup fixture.",
+      type: "match",
+      targetId: "development-fallback-match",
+      href: "/matches/development-fallback-match",
+      priority: 10,
+      active: true,
     },
   ],
 });
