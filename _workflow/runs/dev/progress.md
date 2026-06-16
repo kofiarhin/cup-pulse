@@ -197,3 +197,96 @@ No implementation tasks have started. Intake is complete and the workflow is wai
   - [x] Secrets remain uncommitted and examples contain no credentials.
   - [x] Full repository verification passes.
 - Next: Final review, Fallow Quality, release notes, summary, and health check.
+## Fixture Sync Fix - TASK-001 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Files changed: `server/sync/syncService.js`, `server/tests/worker.test.js`, `_workflow/runs/dev/tasks.md`
+- Iteration 1 Build:
+  - Goal: prove and fix the Sportmonks fixture season filter regression.
+  - Red: `npm test` failed because `syncFixtures()` passed no singular `filter`; expected `fixtureSeasons:2026`.
+  - Green: changed fixture sync from `filters` to `filter`; `npm test` passed with 35 backend tests.
+  - Refactor: no behavior-preserving refactor was needed; syntax checks passed.
+  - Verification: `npm test` passed.
+  - Review: query fix is scoped to `/fixtures`; existing client pagination behavior remains unchanged.
+- Iteration 2 Refine:
+  - Goal: confirm pagination and detailed fixture sync behavior remain intact.
+  - Red: no extra failing test needed because Iteration 1 Red covered the behavior and existing pagination coverage remained active.
+  - Green: `Sportmonks client authenticates and follows pagination` still passed inside `npm test`.
+  - Refactor: no pagination code changed.
+  - Verification: `npm test` passed.
+  - Review: detailed and non-detailed fixture sync share the fixed query path.
+- Iteration 3 Polish:
+  - Goal: syntax and token-safety check.
+  - Red: not applicable; polish-only after accepted Green fix.
+  - Green: `node --check` passed for Sportmonks client, sync service, and worker tests.
+  - Refactor: no further refactor required.
+  - Verification: syntax checks passed.
+  - Review: no `.env` edits or token exposure.
+- Acceptance:
+  - [x] Client test proves `filter` is emitted.
+  - [x] Client/sync tests prove `filters` is absent.
+  - [x] Existing pagination test still passes.
+- Failure recovery: none.
+- Next: TASK-002.
+## Fixture Sync Fix - TASK-002 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Files changed: `server/providers/sportmonks/client.js`, `server/sync/syncService.js`, `server/tests/worker.test.js`, `_workflow/runs/dev/tasks.md`
+- Iteration 1 Build:
+  - Goal: add token-safe request and fixture sync diagnostics.
+  - Red: `npm test` failed because no sanitized Sportmonks request log or fixture sync start/count logs existed.
+  - Green: added logger support to the Sportmonks client and sync service; `npm test` passed.
+  - Refactor: injected a silent logger into non-diagnostic tests to keep test output clean.
+  - Verification: `npm test` passed.
+  - Review: request logs include endpoint and params excluding `api_token`.
+- Iteration 2 Refine:
+  - Goal: cover fixture sync failure logging.
+  - Red: no separate Red captured because failure logging was implemented with the diagnostics hook; coverage was added immediately afterward.
+  - Green: failure-path test passed and asserts the full provider error message is logged.
+  - Refactor: no refactor required.
+  - Verification: `npm test` passed.
+  - Review: failure logging preserves rethrow and sync-state update behavior.
+- Iteration 3 Polish:
+  - Goal: syntax and token-safety check.
+  - Red: not applicable for polish-only pass.
+  - Green: syntax checks passed for changed backend files.
+  - Refactor: no further refactor required.
+  - Verification: `npm test`, `node --check server/providers/sportmonks/client.js`, `node --check server/sync/syncService.js`, and `node --check server/tests/worker.test.js` passed.
+  - Review: no `.env` edits or token exposure.
+- Acceptance:
+  - [x] Requested diagnostic events exist.
+  - [x] Logs never include `api_token` or configured token values.
+  - [x] Failure logs include full error message.
+- Failure recovery: quieted unintended unit-test console output from non-diagnostic tests.
+- Next: TASK-003.
+## Fixture Sync Fix - TASK-003 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Files changed: `server/sync/lockService.js`, `server/sync/syncService.js`, `server/tests/worker.test.js`, workflow artifacts
+- Iteration 1 Build:
+  - Goal: prove automated backend tests and recover any live sync blocker.
+  - Red: live one-shot fixture sync failed before provider fetch with MongoDB duplicate `id: null` on `syncstates`; added tests then failed because lock and sync-state upserts lacked required stable `id` values.
+  - Green: `lockService` now sets `id: key`; sync-state updates now set `id: job`; `npm test` passed with 38 tests.
+  - Refactor: split sync-service helpers after Fallow reported introduced complexity; tests stayed green.
+  - Verification: `npm test`, `node --check server/sync/syncService.js`, and `node --check server/sync/lockService.js` passed.
+  - Review: recovery is in scope because worker lock/sync-state writes blocked fixture persistence.
+- Iteration 2 Refine:
+  - Goal: verify live fixture sync and worker logs.
+  - Red: initial one-shot sync failed on duplicate `id: null`; fixed in Iteration 1.
+  - Green: one-shot sync fetched 132 fixtures from Sportmonks with `filter=fixtureSeasons:27897` and upserted 132 fixtures plus 132 matches.
+  - Refactor: no further source refactor required.
+  - Verification: redirected `npm run worker` logs showed real worker startup, `/fixtures` requests using singular `filter`, 132 fetched, and 132/132 upserted.
+  - Review: logs exclude `api_token` and token values.
+- Iteration 3 Polish:
+  - Goal: verify API/frontend and final quality gates.
+  - Red: API smoke before sync returned cached `dataLength: 0`; after sync the curl returned populated data.
+  - Green: `curl http://localhost:5000/api/v1/fixtures?limit=4` returned HTTP 200 with 4 fixture records and total 132.
+  - Refactor: removed duplicate test object property found during diff review.
+  - Verification: `npm test`, `npm test --prefix client`, `git diff --check`, final diff audit, and Fallow audit passed.
+  - Review: no `.env` edits, no committed tokens, and smoke Node processes were stopped.
+- Acceptance:
+  - [x] `npm test` passes.
+  - [x] Worker/API smoke passes.
+  - [x] Final diff audit finds no token or `.env` exposure.
+- Failure recovery: fixed live MongoDB `id: null` blockers for `syncstates` and `joblocks`; refactored introduced complexity until Fallow passed.
+- Next: final review, Fallow report, release notes, summary, and handoff complete.

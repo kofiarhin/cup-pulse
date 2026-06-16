@@ -2,61 +2,67 @@
 
 ## Request
 
-Implement the production CupPulse MVP from `CupPulse_PRD.md` with real Sportmonks ingestion, MongoDB caching, all public pages, predictions, and structured summaries.
+Fix CupPulse Sportmonks fixture sync so worker ingestion uses Sportmonks `filter=fixtureSeasons:27897`, writes MongoDB fixtures and matches, and keeps diagnostics token-safe.
 
 ## Workflow Sources
 
+- Request: `_workflow/runs/dev/request.md`
 - Spec: `_workflow/runs/dev/spec.md`
 - Task plan: `_workflow/runs/dev/tasks.md`
 - Review: `_workflow/runs/dev/review.md`
+- Verification: `_workflow/runs/dev/verification.md`
+- Fallow: `.workflow/fallow-audit.md`
 - Release notes: `_workflow/runs/dev/release-notes.md`
 
 ## Completed Work
 
-All seven tasks completed: API runtime, normalized data API, Sportmonks worker, prediction/summary engines, match pages, tournament/team/player pages, and production hardening.
-
-Each code-changing task recorded Build, Refine, and Polish iterations with Red, Green, Refactor, verification, review, and acceptance evidence in `_workflow/runs/dev/progress.md`.
-
-Applied skill: design-taste-frontend
+- TASK-001: added tests and changed fixture sync from `filters` to singular `filter`.
+- TASK-002: added token-safe request and fixture sync diagnostics.
+- TASK-003: verified live sync/API behavior and fixed in-scope MongoDB `id: null` blockers in job locks and sync states.
 
 ## Files Changed
 
-- Backend runtime, config, middleware, models, routes, provider integration, worker jobs, sync, derived services, and tests
-- Frontend routing, API/query layer, shared states, all public pages, responsive styles, and tests
-- Environment examples, Heroku `Procfile`, package scripts, architecture/verification/decision docs, and workflow artifacts
+- `server/providers/sportmonks/client.js`
+- `server/sync/lockService.js`
+- `server/sync/syncService.js`
+- `server/tests/worker.test.js`
+- `_workflow/runs/dev/*`
+- `.workflow/fallow-audit.md`
 
 ## Verification
 
-- `npm run verify`: passed
-- Backend: 34 tests passed
-- Frontend: 15 tests passed
-- ESLint and production build passed
-- Server syntax, `git diff --check`, and credential-pattern scan passed
-- Fallow verdict: `PARTIAL`; health score 83.4/B with reviewed non-blocking findings
+- Backend tests: passed, 38 tests.
+- Frontend tests: passed, 15 tests.
+- One-shot fixture sync: fetched 132 fixtures using `filter=fixtureSeasons:27897`, upserted 132 fixtures and 132 matches.
+- Worker smoke: redirected real worker logs verified `/fixtures` requests with singular `filter`, 132 fetched, 132/132 upserted.
+- API curl smoke: HTTP 200, 4 fixture records returned, total 132.
+- Fallow verdict: PASSED.
 
-## Acceptance
+## Acceptance Results
 
-All approved API, data, worker, fallback, prediction, summary, frontend, responsiveness, accessibility, and deployment criteria are complete.
+- [x] Worker fetches fixtures from Sportmonks using `filter=fixtureSeasons:27897`.
+- [x] MongoDB `fixtures` and `matches` collections are populated.
+- [x] `curl http://localhost:5000/api/v1/fixtures?limit=4` returns non-empty `data`.
+- [x] Frontend homepage path remains covered by frontend tests and populated API data.
+- [x] Logs include requested token-safe sync details.
+- [x] `npm test` passes.
+- [x] No `.env` or token value was committed or exposed.
 
 ## Failure Recovery
 
-- Corrected Windows test glob handling.
-- Fixed CORS and malformed JSON behavior after failing tests.
-- Fixed lock-race and active-window behavior.
-- Added missing semantic labels and keyboard skip navigation after failing UI tests.
-- Added worker-derived refresh integration and normalized provider score handling after failing backend tests.
+- Fixed duplicate `id: null` failures for `syncstates` and `joblocks`.
+- Refactored `syncService.js` after Fallow reported introduced complexity.
+- Removed a duplicate test object property found during diff audit.
 
-## Diff Audit
+## Final Diff Audit
 
-The final diff matches the approved spec. No unrelated user changes were reverted, credentials were not added, generated build output is ignored, and changed behavior has test coverage.
+Diff matches the saved spec plus the discovered in-scope persistence blocker. No unrelated source changes, no generated junk, and no secrets were added.
 
 ## Unresolved Issues
 
-- Browser smoke was unavailable in this session.
-- Credential-free HTTP and process smoke passed on 2026-06-14.
-- Credentialed Sportmonks and MongoDB Atlas smoke remains a deployment activity.
-- Heroku authentication is available, but the repository has no linked CupPulse app and no app was created without an explicit deployment target.
+- Direct foreground `npm run worker` times out under the tool because it is a long-running process; redirected worker logs verified successful startup and fixture sync.
+- Inherited `server/providers/sportmonks/client.js` request complexity remains non-blocking.
 
 ## Next Recommended Work
 
-Deploy the web and worker processes with Atlas and Sportmonks configuration, then verify readiness, one successful sync state, cached API reads, and derived prediction/summary records.
+Commit and deploy the worker fix, then monitor the next scheduled worker run in production.

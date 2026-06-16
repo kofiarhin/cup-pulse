@@ -1,12 +1,41 @@
-# Active Work Request
+# Active Workflow Request
 
-Implement a production-shaped CupPulse MVP for the 2026 FIFA Men's World Cup.
+## Raw User Request
 
-Build a public, read-only, mobile-first React application covering Home, Live Matches, Match Details, Fixtures, Results, Standings, Knockout Bracket, Teams, Team Details, Players, Player Details, Match Predictions, and Match Summaries.
+Fix CupPulse Sportmonks fixture sync.
 
-Use the Express backend as the only frontend data source through normalized read-only REST endpoints under `/api/v1`. Integrate Sportmonks Football API v3 in a separate Heroku worker process, normalize and cache real World Cup data in MongoDB Atlas, schedule configurable refresh jobs, and use MongoDB locks to prevent duplicate work. Serve cached data during provider downtime. Permit mock fallback only in development when no cache exists, or in production when explicitly enabled.
+Context:
+- Sportmonks returns fixtures successfully with:
+  GET https://api.sportmonks.com/v3/football/fixtures?filter=fixtureSeasons:27897&api_token=...
+- The app API returns empty cached fixtures from MongoDB.
+- Worker runs, MongoDB connects, but fixtures are not written.
+- The correct Sportmonks query parameter is `filter`, singular, not `filters`.
 
-Implement a deterministic prediction engine using team form and aggregated player form, and a structured narrative engine for article-style post-match summaries. Do not use paid AI or prediction APIs.
+Tasks:
+1. Inspect `server/providers/sportmonks/client.js` and all sync code.
+2. Fix the Sportmonks client so query params use `filter=fixtureSeasons:<seasonId>` when syncing fixtures.
+3. Ensure `/fixtures` sync uses:
+   filter: `fixtureSeasons:${config.sportmonksSeasonId}`
+4. Add useful worker logs:
+   - when fixture sync starts
+   - Sportmonks endpoint/params used, excluding token
+   - number of fixtures fetched
+   - number of fixtures/matches upserted
+   - sync failures with full error message
+5. Ensure pagination still works with Sportmonks `next_page`/cursor if implemented.
+6. Add or update tests for the client query serialization so `filter` is emitted and `filters` is not.
+7. Do not commit `.env` or expose tokens.
+8. After the fix, verify:
+   npm test
+   npm run worker
+   curl http://localhost:5000/api/v1/fixtures?limit=4
 
-Defer Socket.IO real-time transport and admin UI. Do not implement authentication, accounts, profiles, favorites, notifications, comments, saved predictions, or OAuth.
+Acceptance criteria:
+- Worker fetches fixtures from Sportmonks using `filter=fixtureSeasons:27897`.
+- MongoDB `fixtures` and `matches` collections are populated.
+- `curl http://localhost:5000/api/v1/fixtures?limit=4` returns non-empty `data`.
+- Frontend homepage shows upcoming fixtures.
 
+## Normalized Workflow Request
+
+Fix the backend Sportmonks fixture synchronization bug by changing fixture sync from the plural `filters` query parameter to the singular `filter` parameter, preserving pagination, adding token-safe worker/provider logs, and adding tests that prove fixture sync serializes `filter=fixtureSeasons:<seasonId>` without emitting `filters`. Verify with automated tests and, where credentials/services are available, run the worker and fixtures API smoke check.

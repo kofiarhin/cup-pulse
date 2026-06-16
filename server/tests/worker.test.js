@@ -11,6 +11,11 @@ const { createLockService } = require("../sync/lockService");
 const { createSyncService } = require("../sync/syncService");
 const { buildSchedule, isActiveMatchWindow } = require("../jobs/schedule");
 
+const silentLogger = {
+  info() {},
+  error() {},
+};
+
 test("Sportmonks client authenticates and follows pagination", async () => {
   const calls = [];
   const pages = [
@@ -34,6 +39,7 @@ test("Sportmonks client authenticates and follows pagination", async () => {
     token: "test-token",
     fetchImpl,
     timeoutMs: 1000,
+    logger: silentLogger,
   });
 
   const records = await client.fetchAll("/fixtures", {
@@ -44,6 +50,59 @@ test("Sportmonks client authenticates and follows pagination", async () => {
   assert.equal(calls[0].searchParams.get("api_token"), "test-token");
   assert.equal(calls[0].searchParams.get("include"), "participants;venue");
   assert.equal(calls[1].searchParams.get("page"), "2");
+});
+
+test("Sportmonks client serializes fixture season filter without plural filters", async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(new URL(url));
+    return {
+      ok: true,
+      json: async () => ({ data: [], pagination: { has_more: false } }),
+    };
+  };
+  const client = createSportmonksClient({
+    token: "test-token",
+    fetchImpl,
+    timeoutMs: 1000,
+    logger: silentLogger,
+  });
+
+  await client.fetchAll("/fixtures", {
+    filter: "fixtureSeasons:27897",
+  });
+
+  assert.equal(calls[0].searchParams.get("filter"), "fixtureSeasons:27897");
+  assert.equal(calls[0].searchParams.has("filters"), false);
+});
+
+test("Sportmonks client logs sanitized request parameters without token", async () => {
+  const logs = [];
+  const fetchImpl = async () => ({
+    ok: true,
+    json: async () => ({ data: [], pagination: { has_more: false } }),
+  });
+  const client = createSportmonksClient({
+    token: "secret-token",
+    fetchImpl,
+    timeoutMs: 1000,
+    logger: {
+      info(message, details) {
+        logs.push({ message, details });
+      },
+    },
+  });
+
+  await client.fetchAll("/fixtures", {
+    include: "participants;venue",
+    filter: "fixtureSeasons:27897",
+  });
+
+  assert.equal(logs[0].message, "Sportmonks request");
+  assert.equal(logs[0].details.endpoint, "/fixtures");
+  assert.equal(logs[0].details.params.filter, "fixtureSeasons:27897");
+  assert.equal(logs[0].details.params.api_token, undefined);
+  assert.equal(JSON.stringify(logs).includes("secret-token"), false);
 });
 
 test("normalizers keep stable CupPulse ids and omit raw payloads", () => {
@@ -121,7 +180,9 @@ test("MongoDB lock service prevents duplicate active job claims", async () => {
       if (current && current.expiresAt > filter.$or[0].expiresAt.$lte) {
         return null;
       }
+      assert.equal(update.$set.id, filter.key);
       const lock = {
+        id: update.$set.id,
         key: filter.key,
         owner: update.$set.owner,
         expiresAt: update.$set.expiresAt,
@@ -201,17 +262,22 @@ test("match statistics refresh only runs around active match windows", () => {
 test("fixture synchronization refreshes derived data for changed matches", async () => {
   const refreshCalls = [];
   const records = [];
+  const fetchCalls = [];
+  const syncStateUpdates = [];
   const model = {
     async bulkWrite(operations) {
       records.push(...operations);
     },
   };
   const syncState = {
-    async findOneAndUpdate() {},
+    async findOneAndUpdate(filter, update) {
+      syncStateUpdates.push({ filter, update });
+    },
   };
   const sync = createSyncService({
     client: {
-      async fetchAll() {
+      async fetchAll(path, parameters) {
+        fetchCalls.push({ path, parameters });
         return [
           {
             id: 99,
@@ -223,6 +289,7 @@ test("fixture synchronization refreshes derived data for changed matches", async
       },
     },
     config: { sportmonksSeasonId: 2026 },
+    logger: silentLogger,
     models: {
       Competition: model,
       Fixture: model,
@@ -240,6 +307,114 @@ test("fixture synchronization refreshes derived data for changed matches", async
 
   await sync.syncFixtures();
 
+  assert.equal(fetchCalls[0].path, "/fixtures");
+  assert.equal(fetchCalls[0].parameters.filter, "fixtureSeasons:2026");
+  assert.equal("filters" in fetchCalls[0].parameters, false);
+  assert.equal(syncStateUpdates[0].update.$set.id, "fixtures");
+  assert.equal(syncStateUpdates[1].update.$set.id, "fixtures");
   assert.deepEqual(refreshCalls, [["fixture-99"]]);
   assert.equal(records.length, 2);
+});
+
+test("fixture synchronization logs full failure messages", async () => {
+  const logs = [];
+  const sync = createSyncService({
+    client: {
+      async fetchAll() {
+        throw new Error("Sportmonks fixture request failed with status 400");
+      },
+    },
+    config: { sportmonksSeasonId: 27897 },
+    logger: {
+      info() {},
+      error(message, details) {
+        logs.push({ message, details });
+      },
+    },
+    models: {
+      Competition: {},
+      Fixture: {},
+      Match: {},
+      Player: {},
+      Standing: {},
+      SyncState: { async findOneAndUpdate() {} },
+      Team: {},
+      Venue: {},
+    },
+  });
+
+  await assert.rejects(() => sync.syncFixtures(), /status 400/);
+
+  assert.deepEqual(logs, [
+    {
+      message: "Fixture sync failed",
+      details: {
+        job: "fixtures",
+        error: "Sportmonks fixture request failed with status 400",
+      },
+    },
+  ]);
+});
+
+test("fixture synchronization logs start, fetched count, and upsert counts", async () => {
+  const logs = [];
+  const model = {
+    async bulkWrite(operations) {
+      return { upsertedCount: operations.length };
+    },
+  };
+  const sync = createSyncService({
+    client: {
+      async fetchAll() {
+        return [
+          {
+            id: 100,
+            starting_at: "2026-06-20T19:00:00.000Z",
+            state: { short_name: "NS" },
+            participants: [],
+          },
+          {
+            id: 101,
+            starting_at: "2026-06-21T19:00:00.000Z",
+            state: { short_name: "NS" },
+            participants: [],
+          },
+        ];
+      },
+    },
+    config: { sportmonksSeasonId: 27897 },
+    logger: {
+      info(message, details) {
+        logs.push({ level: "info", message, details });
+      },
+      error(message, details) {
+        logs.push({ level: "error", message, details });
+      },
+    },
+    models: {
+      Competition: model,
+      Fixture: model,
+      Match: model,
+      Player: model,
+      Standing: model,
+      SyncState: { async findOneAndUpdate() {} },
+      Team: model,
+      Venue: model,
+    },
+    async refreshDerived() {},
+  });
+
+  await sync.syncFixtures();
+
+  assert.ok(logs.find((log) => log.message === "Fixture sync started"));
+  assert.deepEqual(
+    logs.find((log) => log.message === "Fixture sync fetched fixtures")
+      .details,
+    { job: "fixtures", count: 2 },
+  );
+  assert.deepEqual(
+    logs.find((log) => log.message === "Fixture sync upserted records")
+      .details,
+    { job: "fixtures", fixtures: 2, matches: 2 },
+  );
 });

@@ -18,7 +18,7 @@ function createLockService({
             { expiresAt: { $exists: false } },
           ],
         },
-        { $set: { key, owner, expiresAt } },
+        { $set: { id: key, key, owner, expiresAt } },
         { new: true, upsert: true },
       );
     } catch (error) {

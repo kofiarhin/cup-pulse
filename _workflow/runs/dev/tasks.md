@@ -1,115 +1,185 @@
-# CupPulse Production MVP Task Plan
+# Task Plan: Fix Sportmonks Fixture Sync
 
 - Spec file used: `_workflow/runs/dev/spec.md`
-- Planning date: 2026-06-14
-- Progress read: `_workflow/runs/dev/progress.md`
-- Summary read: none exists
-- Handoff read: `_workflow/runs/dev/handoff.md`
-- Spec sections used: 11-22, especially affected surfaces, dependencies, data impact, API/UX expectations, execution and verification strategies, acceptance criteria, risks, assumptions, and extraction notes.
-- Applied skill: design-taste-frontend
+- Planning date: 2026-06-16
+- Progress and summary files read: `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`
+- Spec sections used: 5 Current State Analysis, 6 Desired End State, 9 Functional Requirements, 11 Affected Surfaces, 12 Dependency And Integration Map, 14 UX / API / Workflow Expectations, 15 Execution Strategy, 16 Verification Strategy, 17 Acceptance Criteria, 18 Edge Cases And Failure Modes, 19 Risks And Mitigations, 20 Assumptions, 22 Task Extraction Notes.
 
-## Task List
-
-### TASK-001: Establish the tested API runtime
+## TASK-001: Prove and fix fixture season filter serialization
 
 - Status: Done
-- Objective: Add validated runtime configuration, MongoDB lifecycle, health/readiness routes, API envelopes, CORS, and centralized errors.
-- Files likely affected: `package.json`, `server/app.js`, `server/server.js`, `server/config/**`, `server/middleware/**`, `server/tests/**`, `.env.example`
-- Checklist: config validation; database connector; success/error helpers; `/health`; `/ready`; 404/error middleware; backend test command.
-- Iteration 1 Build: Red health/config tests; Green minimum runtime; Refactor config/error boundaries.
-- Iteration 2 Refine: Red production/missing-env and CORS tests; Green strict behavior; Refactor startup composition.
-- Iteration 3 Polish: Red metadata/security regression tests; Green response polish; Refactor naming/docs.
-- Test plan: Node test runner and Supertest.
-- Red/Green/Refactor evidence: Record in progress after each iteration.
-- Test commands: `npm test`
-- Acceptance criteria: Production requires MongoDB; consistent errors; health/readiness are testable; secrets are not returned.
-- Acceptance result: [x] Production configuration validation, normalized health/readiness/errors, strict CORS, safe JSON errors, and secret-safe public config verified.
-- Verification commands: `npm test`, server syntax/startup smoke.
-- Stop condition: Runtime contracts pass without requiring live Atlas during tests.
-- Out of scope: Domain models and Sportmonks calls.
-
-### TASK-002: Serve normalized World Cup records
-
-- Status: Done
-- Objective: Add normalized Mongoose models, query services, mock fallback repository, and every required read-only `/api/v1` endpoint.
-- Files likely affected: `server/models/**`, `server/services/**`, `server/controllers/**`, `server/routes/**`, `server/data/**`, `server/tests/**`
-- Checklist: required collections; indexes; pagination/filter validation; freshness/source metadata; detail/not-found behavior; mock fallback policy.
-- Iteration plan: Build schemas/contracts; Refine filters and stale metadata; Polish edge cases and indexes. Every iteration uses Red -> Green -> Refactor.
-- Test plan: Model/service units and Supertest API contracts with mocked repositories.
-- Acceptance criteria: All required endpoints exist and return normalized envelopes without raw provider payloads.
-- Acceptance result: [x] Required endpoints, schemas, filtering, pagination, freshness/source metadata, fallback policy, and private provider fields verified.
+- Objective: Ensure fixture sync sends `filter=fixtureSeasons:<seasonId>` and never sends `filters`.
+- Files likely affected: `server/sync/syncService.js`, `server/providers/sportmonks/client.js`, `server/tests/worker.test.js`
+- Checklist:
+  - [x] Add failing coverage for Sportmonks client query serialization with `filter`.
+  - [x] Add failing coverage for `syncFixtures()` passing `filter` and not `filters`.
+  - [x] Replace fixture sync `filters` parameter with `filter`.
+  - [x] Preserve existing page-number pagination.
+  - [x] Run relevant tests after Red, Green, and Refactor.
+- Iteration 1 Build:
+  - Goal: Create failing tests that expose the plural `filters` regression.
+  - Changes made: added Sportmonks client serialization coverage and sync-service parameter assertions.
+  - Test plan: run `npm test` before implementation and capture expected failure.
+  - Red phase evidence: `npm test` failed because `fetchCalls[0].parameters.filter` was undefined while the test expected `fixtureSeasons:2026`.
+  - Green phase evidence: replaced `filters` with `filter`; `npm test` passed with 35 tests.
+  - Refactor phase evidence: no behavior-preserving refactor needed; syntax checks for changed files passed.
+  - Test commands run: `npm test`; `node --check server/providers/sportmonks/client.js`; `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`.
+  - Verification command/result: `npm test` passed.
+  - Review findings: the diff is narrow and existing page-number pagination remains unchanged.
+  - Acceptance status: accepted.
+  - Remaining issues: diagnostics still pending in TASK-002.
+  - Next action: start TASK-002.
+- Iteration 2 Refine:
+  - Goal: Confirm pagination and detailed fixture sync continue to use the same filter behavior.
+  - Changes made: confirmed the existing pagination test still passes with the new filter assertions.
+  - Test plan: targeted backend tests.
+  - Red phase evidence: no additional failing test needed; the Red test from Iteration 1 already covered the regression.
+  - Green phase evidence: `npm test` passed and retained `Sportmonks client authenticates and follows pagination`.
+  - Refactor phase evidence: no pagination code changed.
+  - Test commands run: `npm test`.
+  - Verification command/result: passed, 35 tests.
+  - Review findings: detailed and standard fixture sync share the same filter code path.
+  - Acceptance status: accepted.
+  - Remaining issues: diagnostics still pending in TASK-002.
+  - Next action: prepare diagnostics task.
+- Iteration 3 Polish:
+  - Goal: Check token-safety and narrow diff for query serialization.
+  - Changes made: reviewed the source diff and ran syntax checks.
+  - Test plan: backend tests and syntax check.
+  - Red phase evidence: no additional failing test needed; this pass was polish-only after the accepted Green fix.
+  - Green phase evidence: syntax checks passed for client, sync service, and worker tests.
+  - Refactor phase evidence: no refactor required.
+  - Test commands run: `node --check server/providers/sportmonks/client.js`; `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`.
+  - Verification command/result: passed.
+  - Review findings: no token exposure was introduced; tests use dummy token only.
+  - Acceptance status: accepted.
+  - Remaining issues: none for TASK-001.
+  - Next action: TASK-002.
+- Acceptance criteria:
+  - [x] Client test proves `filter` is emitted.
+  - [x] Client/sync tests prove `filters` is absent.
+  - [x] Existing pagination test still passes.
+- Acceptance result: accepted.
 - Verification commands: `npm test`
-- Stop condition: API contract suite passes.
-- Out of scope: Provider writes and UI.
+- Stop condition: tests cannot prove the query key or implementation would require broad provider refactor.
+- Out-of-scope items: public API/frontend changes, env edits, schema changes.
 
-### TASK-003: Synchronize Sportmonks data from a worker
-
-- Status: Done
-- Objective: Add the Sportmonks v3 client, normalizers, idempotent sync services, MongoDB locks, configurable schedules, and separate worker process.
-- Files likely affected: `server/providers/**`, `server/sync/**`, `server/jobs/**`, `server/worker.js`, `Procfile`, `package.json`, `server/tests/**`
-- Checklist: authenticated client; pagination; timeout/retry/429 handling; selective includes; upserts; locks; schedules; sync-state records; web/worker separation.
-- Iteration plan: Build client/normalizers; Refine locking/idempotency; Polish retry, logging, and schedule controls. Every iteration uses Red -> Green -> Refactor.
-- Test plan: Mocked fetch/provider pages, normalizer fixtures, lock and scheduler units.
-- Acceptance criteria: Only worker syncs; schedules match requirements and are configurable; cached records survive failed sync.
-- Acceptance result: [x] Separate worker, authenticated pagination, normalization, idempotent upserts, sync state, locks, schedules, and active-match gating verified.
-- Verification commands: `npm test`, worker startup smoke without credentials in test mode.
-- Stop condition: Provider and job tests pass without a live API token.
-- Out of scope: Socket.IO.
-
-### TASK-004: Generate predictions and match summaries
+## TASK-002: Add token-safe fixture sync diagnostics
 
 - Status: Done
-- Objective: Add deterministic player/team form prediction and structured narrative summary engines with source fingerprints and persistence.
-- Files likely affected: `server/services/predictions/**`, `server/services/summaries/**`, models, jobs, routes, tests.
-- Checklist: required weights/inputs; probability normalization; predicted score; confidence/rationale; article sections; unfinished message; fingerprint-based regeneration.
-- Iteration plan: Build pure engines; Refine missing-data behavior; Polish persistence/regeneration and rationale quality. Every iteration uses Red -> Green -> Refactor.
-- Test plan: Deterministic fixtures, invariants, missing-data cases, and API route tests.
-- Acceptance criteria: Required prediction fields and exact unfinished summary message are returned.
-- Acceptance result: [x] Weighted player/team prediction, required output, structured summary, exact unfinished state, and fingerprint-controlled persistence verified.
-- Verification commands: `npm test`
-- Stop condition: Derived-data tests and routes pass.
-- Out of scope: Paid AI and provider prediction products.
+- Objective: Add useful logs for fixture sync start, endpoint/params excluding token, fetched count, upsert counts, and full failure messages.
+- Files likely affected: `server/providers/sportmonks/client.js`, `server/sync/syncService.js`, `server/tests/worker.test.js`
+- Checklist:
+  - [x] Add injectable logger or request hook without exposing `api_token`.
+  - [x] Log fixture sync start.
+  - [x] Log Sportmonks endpoint/params excluding token.
+  - [x] Log fixtures fetched.
+  - [x] Log fixtures and matches upserted.
+  - [x] Log sync failures with full error message.
+  - [x] Add/adjust tests for logging behavior.
+- Iteration 1 Build:
+  - Goal: Add failing diagnostics coverage.
+  - Changes made: added tests for sanitized client request logs and fixture sync start/fetch/upsert logs.
+  - Test plan: backend tests.
+  - Red phase evidence: `npm test` failed because no sanitized client request logs or fixture sync start/count logs were emitted.
+  - Green phase evidence: added logger support to the Sportmonks client and sync service; `npm test` passed.
+  - Refactor phase evidence: added silent logger injection to non-diagnostic tests to keep output clean.
+  - Test commands run: `npm test`.
+  - Verification command/result: passed with 38 backend tests.
+  - Review findings: logged request params exclude `api_token` and token values.
+  - Acceptance status: accepted.
+  - Remaining issues: live verification still pending.
+  - Next action: verify failure logging.
+- Iteration 2 Refine:
+  - Goal: Verify failure logging and sync-state behavior.
+  - Changes made: added explicit failure-path coverage for fixture sync error logs.
+  - Test plan: targeted failure-path test and backend tests.
+  - Red phase evidence: no separate Red captured because failure logging was implemented with the diagnostics hook; coverage was added immediately afterward.
+  - Green phase evidence: failure-path test passed and asserted full message `Sportmonks fixture request failed with status 400`.
+  - Refactor phase evidence: no refactor required.
+  - Test commands run: `npm test`.
+  - Verification command/result: passed with 38 backend tests.
+  - Review findings: sync-state failure path still rethrows after logging and updating sync state.
+  - Acceptance status: accepted with documented Red-sequencing exception for the follow-up failure-path assertion.
+  - Remaining issues: none for diagnostics.
+  - Next action: polish token-safety.
+- Iteration 3 Polish:
+  - Goal: Confirm diagnostics are readable and token-safe.
+  - Changes made: ran syntax checks and reviewed token-sensitive diff.
+  - Test plan: backend tests, syntax check, credential-pattern review.
+  - Red phase evidence: not applicable; polish-only after accepted diagnostics implementation.
+  - Green phase evidence: syntax checks passed for client, sync service, and worker tests.
+  - Refactor phase evidence: no further refactor required.
+  - Test commands run: `npm test`; `node --check server/providers/sportmonks/client.js`; `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`.
+  - Verification command/result: passed.
+  - Review findings: logs are structured and token-safe; no `.env` edits.
+  - Acceptance status: accepted.
+  - Remaining issues: none for TASK-002.
+  - Next action: TASK-003.
+- Acceptance criteria:
+  - [x] Requested diagnostic events exist.
+  - [x] Logs never include `api_token` or configured token values.
+  - [x] Failure logs include full error message.
+- Acceptance result: accepted.
+- Verification commands: `npm test`, `node --check server/providers/sportmonks/client.js`, `node --check server/sync/syncService.js`
+- Stop condition: safe diagnostics require changing unrelated worker architecture.
+- Out-of-scope items: observability vendor integration, persistent log storage.
 
-### TASK-005: Build the public match experience
+## TASK-003: Verify worker/API fixture population or document live-service blocker
 
 - Status: Done
-- Objective: Add the frontend foundation and Home, Live Matches, Fixtures, Results, Match Details, Predictions, and Summaries pages using `/api/v1`.
-- Files likely affected: `client/package.json`, `client/src/app/**`, `client/src/components/**`, `client/src/pages/**`, `client/src/services/**`, `client/src/styles/**`, tests.
-- Checklist: React Router; TanStack Query; Tailwind; app shell; search/filter/pagination; freshness badges; responsive pages; skeleton/empty/error states.
-- Iteration plan: Build routed data views; Refine accessibility/responsiveness; Polish editorial hierarchy and motion. Every iteration uses Red -> Green -> Refactor.
-- Test plan: Vitest/RTL route and component tests plus browser smoke.
-- Acceptance criteria: Match-facing pages are responsive and API-backed.
-- Acceptance result: [x] Home, live, fixtures, results, match detail, prediction, and summary routes are responsive, API-backed, searchable/paginated where applicable, and include full UI states.
-- Verification commands: `npm test --prefix client`, `npm run lint --prefix client`, `npm run build --prefix client`
-- Stop condition: Tests/build pass and browser review shows no blocking layout defects.
-- Out of scope: Team/player/bracket pages.
-- Applied skill: design-taste-frontend
-
-### TASK-006: Build tournament, team, and player exploration
-
-- Status: Done
-- Objective: Add Standings, Knockout Bracket, Teams, Team Details, Players, and Player Details with data-driven 48-team behavior.
-- Files likely affected: `client/src/components/**`, `client/src/pages/**`, `client/src/services/**`, tests.
-- Checklist: responsive standings; horizontally navigable bracket; team/player search and pagination; detail profiles; unavailable-stat handling.
-- Iteration plan: Build pages; Refine responsive/accessibility behavior; Polish density, states, and transitions. Every iteration uses Red -> Green -> Refactor.
-- Test plan: Component/route tests and browser checks at mobile/desktop widths.
-- Acceptance criteria: Remaining public pages work and never fabricate unavailable data.
-- Acceptance result: [x] Standings, bracket, team/player directories, detail profiles, explicit unavailable values, responsive navigation, and accessibility semantics verified.
-- Verification commands: client tests, lint, build, browser smoke.
-- Stop condition: Public route matrix passes.
-- Out of scope: Admin and personalized features.
-- Applied skill: design-taste-frontend
-
-### TASK-007: Harden deployment and production resilience
-
-- Status: Done
-- Objective: Finalize environment/deployment docs, production fallback enforcement, full verification, browser review, and durable architecture docs.
-- Files likely affected: `.env.example`, `Procfile`, docs, package scripts, tests, workflow artifacts.
-- Checklist: web/worker commands; env catalog; Atlas/Sportmonks setup; production mock guard; final test/lint/build; diff audit; review; Fallow; release notes; summary.
-- Iteration plan: Build deployment config; Refine operational failure behavior; Polish docs and final quality evidence. Every code-changing iteration uses Red -> Green -> Refactor.
-- Test plan: Full repository verification and production-config tests.
-- Acceptance criteria: Deployment configuration is explicit, secrets remain ignored, and all workflow gates are complete.
-- Acceptance result: [x] Derived refresh wiring, normalized score ingestion, deployment configuration, production fallback enforcement, durable docs, and full verification are complete.
-- Verification commands: full backend/client suite, lint/build, browser smoke, Fallow audit.
-- Stop condition: Workflow health can be assessed with all required artifacts.
-- Out of scope: Actual cloud deployment and credentials provisioning.
+- Objective: Run final automated verification and attempt the requested live worker/API fixture smoke.
+- Files likely affected: workflow artifacts only unless a verification defect is found.
+- Checklist:
+  - [x] Run `npm test`.
+  - [x] Attempt `npm run worker` with a bounded timeout.
+  - [x] Attempt `curl http://localhost:5000/api/v1/fixtures?limit=4` when an API server is available or start one if safe.
+  - [x] Check diff for token or `.env` exposure.
+  - [x] Run final diff audit, review, Fallow, release notes, summary, and health check.
+- Iteration 1 Build:
+  - Goal: Prove automated backend tests pass.
+  - Changes made: no planned code changes; recovery added required `id` values for `JobLock` and `SyncState` after live verification exposed duplicate `id: null` blockers.
+  - Test plan: `npm test`.
+  - Red phase evidence: live one-shot fixture sync failed with MongoDB duplicate `id: null` on `syncstates`; added tests then failed because lock and sync-state updates did not set stable `id` fields.
+  - Green phase evidence: `lockService` now sets `id: key` and sync state updates set `id: job`; `npm test` passed with 38 backend tests.
+  - Refactor phase evidence: refactored `syncService.js` helper structure after Fallow initially reported introduced complexity; tests stayed green.
+  - Test commands run: `npm test`; `node --check server/sync/syncService.js`; `node --check server/sync/lockService.js`.
+  - Verification command/result: passed.
+  - Review findings: recovery is in-scope because worker locks and sync states blocked fixture writes before Sportmonks fetch/upsert.
+  - Acceptance status: accepted.
+  - Remaining issues: direct foreground `npm run worker` is a long-running process and hit tool timeout; redirected worker logs verified the entrypoint.
+  - Next action: run worker smoke.
+- Iteration 2 Refine:
+  - Goal: Attempt worker execution and capture whether fixtures sync can run locally.
+  - Changes made: ran one-shot sync through configured Sportmonks client and sync service, then ran real worker entrypoint with redirected logs.
+  - Test plan: bounded `npm run worker`.
+  - Red phase evidence: the first one-shot sync failed on duplicate `id: null`; fixed in Iteration 1.
+  - Green phase evidence: one-shot sync fetched 132 fixtures with `filter=fixtureSeasons:27897` across pages 1-6 and upserted 132 fixtures plus 132 matches.
+  - Refactor phase evidence: no further source refactor required after Fallow cleanup.
+  - Test commands run: one-shot sync script; redirected `npm run worker` smoke.
+  - Verification command/result: worker logs showed `CupPulse Sportmonks worker started`, `/fixtures` requests with singular `filter`, 132 fetched, and 132/132 upserted.
+  - Review findings: logs exclude token values and `api_token`.
+  - Acceptance status: accepted.
+  - Remaining issues: none.
+  - Next action: API curl smoke.
+- Iteration 3 Polish:
+  - Goal: Attempt API fixture curl and complete quality artifacts.
+  - Changes made: started API server, ran curl smoke, ran frontend tests, final diff audit, Fallow audit, and process cleanup.
+  - Test plan: curl smoke plus final quality commands.
+  - Red phase evidence: initial API smoke before sync returned `dataLength: 0`; after sync, curl returned four fixture records.
+  - Green phase evidence: `curl http://localhost:5000/api/v1/fixtures?limit=4` returned HTTP 200 with `data` length 4 and pagination total 132.
+  - Refactor phase evidence: removed duplicate `logger` test property after diff review; tests and Fallow stayed green.
+  - Test commands run: `curl.exe -s -m 15 -w ... http://localhost:5000/api/v1/fixtures?limit=4`; `npm test --prefix client`; `git diff --check`; `git diff --stat`; `git diff`; `npx fallow audit --format json --quiet --explain`.
+  - Verification command/result: all passed; Fallow verdict `pass`.
+  - Review findings: no `.env` changes, no token exposure, and temporary smoke processes were stopped.
+  - Acceptance status: accepted.
+  - Remaining issues: inherited Fallow complexity hotspot in `server/providers/sportmonks/client.js` remains non-blocking and not introduced by this change.
+  - Next action: final handoff.
+- Acceptance criteria:
+  - [x] `npm test` passes.
+  - [x] Live worker/API smoke passes or blocker is documented.
+  - [x] Final diff audit finds no token or `.env` exposure.
+- Acceptance result: accepted.
+- Verification commands: `npm test`, `npm run worker`, `curl http://localhost:5000/api/v1/fixtures?limit=4`, `git diff --stat`, `git diff`
+- Stop condition: live credentials/services are unavailable or verification reveals unfixable in-scope failure.
+- Out-of-scope items: deployment, committing, manual database mutation.

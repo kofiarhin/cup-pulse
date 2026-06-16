@@ -52,3 +52,43 @@ Append compact, timestamped workflow and memory updates. Do not rewrite prior en
 - Artifact: updated verification, summary, handoff, run brain, activity, and checkpoints
 - Checkpoint: saved
 - Next: link or create a CupPulse deployment target and provide Atlas/Sportmonks configuration
+## 2026-06-16T05:17:46+01:00
+
+Activity
+- Stage: complete -> spec-approval
+- Memory: updated run request context for Sportmonks fixture sync fix
+- Artifact: updated `_workflow/runs/dev/request.md`, `_workflow/runs/dev/spec.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: wait for explicit spec approval before task planning
+## 2026-06-16T05:25:00+01:00
+
+Activity
+- Stage: spec-approval -> task-planning
+- Memory: updated approval and task-plan state
+- Artifact: created `_workflow/runs/dev/tasks.md`; updated `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: start TASK-001 Red phase
+## 2026-06-16T05:32:00+01:00
+
+Activity
+- Stage: task-planning -> TASK-002 ready
+- Memory: updated TASK-001 completion evidence
+- Artifact: updated `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: add token-safe fixture sync diagnostics
+## 2026-06-16T05:45:00+01:00
+
+Activity
+- Stage: TASK-002 ready -> TASK-003 ready
+- Memory: updated TASK-002 diagnostics evidence
+- Artifact: updated `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: run final verification and smoke checks
+## 2026-06-16T06:05:00+01:00
+
+Activity
+- Stage: TASK-003 ready -> complete
+- Memory: updated final verification, review, Fallow, release notes, and summary evidence
+- Artifact: updated `_workflow/runs/dev/verification.md`, `_workflow/runs/dev/review.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
+- Checkpoint: saved
+- Next: commit and deploy the worker fix

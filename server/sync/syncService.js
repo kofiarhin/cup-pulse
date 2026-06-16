@@ -8,7 +8,7 @@ const {
 } = require("../providers/sportmonks/normalizers");
 
 async function upsertMany(model, records) {
-  if (records.length === 0) return;
+  if (records.length === 0) return 0;
   await model.bulkWrite(
     records.map((record) => ({
       updateOne: {
@@ -19,12 +19,40 @@ async function upsertMany(model, records) {
     })),
     { ordered: false },
   );
+  return records.length;
+}
+
+function createLogger(logger) {
+  return {
+    info:
+      typeof logger.info === "function" ? logger.info.bind(logger) : () => {},
+    error:
+      typeof logger.error === "function" ? logger.error.bind(logger) : () => {},
+  };
+}
+
+function syncStateUpdate(job, fields) {
+  return {
+    $set: {
+      id: job,
+      job,
+      ...fields,
+    },
+  };
+}
+
+function fixtureInclude(detailed) {
+  if (detailed) {
+    return "participants;venue;state;stage;group;scores;events;statistics;lineups;sidelined;xGFixture";
+  }
+  return "participants;venue;state;stage;group;scores";
 }
 
 function createSyncService({
   client,
   config,
   refreshDerived = async () => {},
+  logger = console,
   models = defaultModels,
 }) {
   const {
@@ -38,39 +66,81 @@ function createSyncService({
     Venue,
   } = models;
   const competitionId = "fifa-world-cup-2026";
+  const log = createLogger(logger);
+
+  function logFixtureFailure(job, error) {
+    if (job === "fixtures" || job === "match-stats") {
+      log.error("Fixture sync failed", {
+        job,
+        error: error.message,
+      });
+    }
+  }
 
   async function track(job, operation) {
     await SyncState.findOneAndUpdate(
       { job },
-      { $set: { job, status: "running", lastStartedAt: new Date() } },
+      syncStateUpdate(job, {
+        status: "running",
+        lastStartedAt: new Date(),
+      }),
       { upsert: true },
     );
     try {
       const result = await operation();
       await SyncState.findOneAndUpdate(
         { job },
-        {
-          $set: {
-            status: "succeeded",
-            lastSucceededAt: new Date(),
-            lastError: null,
-          },
-        },
+        syncStateUpdate(job, {
+          status: "succeeded",
+          lastSucceededAt: new Date(),
+          lastError: null,
+        }),
       );
       return result;
     } catch (error) {
+      logFixtureFailure(job, error);
       await SyncState.findOneAndUpdate(
         { job },
-        {
-          $set: {
-            status: "failed",
-            lastFailedAt: new Date(),
-            lastError: error.message,
-          },
-        },
+        syncStateUpdate(job, {
+          status: "failed",
+          lastFailedAt: new Date(),
+          lastError: error.message,
+        }),
       );
       throw error;
     }
+  }
+
+  async function fetchFixtures(job, detailed) {
+    log.info("Fixture sync started", {
+      job,
+      seasonId: config.sportmonksSeasonId,
+    });
+    const fixtures = await client.fetchAll("/fixtures", {
+      include: fixtureInclude(detailed),
+      filter: `fixtureSeasons:${config.sportmonksSeasonId}`,
+    });
+    log.info("Fixture sync fetched fixtures", {
+      job,
+      count: fixtures.length,
+    });
+    return fixtures;
+  }
+
+  async function upsertFixturesAndMatches(job, normalized) {
+    const fixturesUpserted = await upsertMany(
+      Fixture,
+      normalized.map((item) => item.fixture),
+    );
+    const matchesUpserted = await upsertMany(
+      Match,
+      normalized.map((item) => item.match),
+    );
+    log.info("Fixture sync upserted records", {
+      job,
+      fixtures: fixturesUpserted,
+      matches: matchesUpserted,
+    });
   }
 
   async function syncStatic() {
@@ -134,18 +204,11 @@ function createSyncService({
   async function syncFixtures({ detailed = false } = {}) {
     const job = detailed ? "match-stats" : "fixtures";
     return track(job, async () => {
-      const include = detailed
-        ? "participants;venue;state;stage;group;scores;events;statistics;lineups;sidelined;xGFixture"
-        : "participants;venue;state;stage;group;scores";
-      const fixtures = await client.fetchAll("/fixtures", {
-        include,
-        filters: `fixtureSeasons:${config.sportmonksSeasonId}`,
-      });
+      const fixtures = await fetchFixtures(job, detailed);
       const normalized = fixtures.map((fixture) =>
         normalizeFixture(fixture, competitionId),
       );
-      await upsertMany(Fixture, normalized.map((item) => item.fixture));
-      await upsertMany(Match, normalized.map((item) => item.match));
+      await upsertFixturesAndMatches(job, normalized);
       await refreshDerived(normalized.map((item) => item.match.id));
     });
   }
@@ -153,4 +216,4 @@ function createSyncService({
   return { syncCore, syncFixtures, syncStatic };
 }
 
-module.exports = { createSyncService, upsertMany };
+module.exports = { createSyncService };

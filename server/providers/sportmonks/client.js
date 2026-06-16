@@ -10,6 +10,7 @@ function createSportmonksClient({
   baseUrl = DEFAULT_BASE_URL,
   timeoutMs = 15_000,
   maxRetries = 2,
+  logger = console,
 } = {}) {
   if (!token) {
     throw new Error("SPORTMONKS_API_TOKEN is required for synchronization");
@@ -26,6 +27,16 @@ function createSportmonksClient({
         url.searchParams.set(key, String(value));
       }
     }
+    const sanitizedParams = {};
+    for (const [key, value] of url.searchParams.entries()) {
+      if (key !== "api_token") {
+        sanitizedParams[key] = value;
+      }
+    }
+    logger.info?.("Sportmonks request", {
+      endpoint: path,
+      params: sanitizedParams,
+    });
 
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
       const controller = new AbortController();

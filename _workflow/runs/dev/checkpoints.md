@@ -81,3 +81,38 @@ Append a checkpoint at intake completion, spec save, task-plan save, each comple
 - Artifacts changed: `_workflow/runs/dev/verification.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/brain.json`, and activity/checkpoint logs.
 - Open questions: Heroku app target, MongoDB Atlas URI, Sportmonks token, league ID, season ID, and production client URL.
 - Next action: Run credentialed deployment smoke after external configuration is available.
+## 2026-06-16T05:17:46+01:00 - Spec Saved
+
+- Stage: spec-approval
+- Memory summary: captured active request to fix Sportmonks fixture sync by replacing `filters` with `filter`, preserving pagination, adding token-safe logs, and verifying with tests/live smoke where available.
+- Artifacts changed: `_workflow/runs/dev/request.md`, `_workflow/runs/dev/spec.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`
+- Open questions: live credential and service availability for `npm run worker` and API curl smoke.
+- Next action: wait for explicit approval of `_workflow/runs/dev/spec.md`, then generate `_workflow/runs/dev/tasks.md`.
+## 2026-06-16T05:25:00+01:00 - Task Plan Saved
+
+- Stage: task-planning
+- Memory summary: recorded user approval and derived three vertical tasks from the saved fixture sync spec.
+- Artifacts changed: `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`
+- Open questions: live worker/API smoke still depends on available credentials and services.
+- Next action: start TASK-001 Red phase.
+## 2026-06-16T05:32:00+01:00 - TASK-001 Done
+
+- Stage: TASK-002 ready
+- Memory summary: completed filter serialization fix; backend tests prove singular `filter` is emitted and plural `filters` is absent.
+- Artifacts changed: `server/sync/syncService.js`, `server/tests/worker.test.js`, `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Open questions: live worker/API smoke depends on credentials and services.
+- Next action: add token-safe fixture sync diagnostics.
+## 2026-06-16T05:45:00+01:00 - TASK-002 Done
+
+- Stage: TASK-003 ready
+- Memory summary: completed token-safe diagnostics for Sportmonks requests and fixture sync success/failure paths.
+- Artifacts changed: `server/providers/sportmonks/client.js`, `server/sync/syncService.js`, `server/tests/worker.test.js`, `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Open questions: live worker/API smoke depends on credentials and services.
+- Next action: run final verification and smoke checks.
+## 2026-06-16T06:05:00+01:00 - Workflow Complete
+
+- Stage: complete
+- Memory summary: Sportmonks fixture sync fixed and verified with live season 27897; MongoDB fixtures/matches populated; Fallow and tests passed.
+- Artifacts changed: `_workflow/runs/dev/verification.md`, `_workflow/runs/dev/review.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
+- Open questions: none blocking.
+- Next action: commit and deploy the worker fix.

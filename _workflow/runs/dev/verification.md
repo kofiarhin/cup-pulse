@@ -1,46 +1,37 @@
 # Verification
 
-Date: 2026-06-14
+## Request
 
-Applied skill: design-taste-frontend
+Fix Sportmonks fixture sync so `/fixtures` uses `filter=fixtureSeasons:27897`, writes MongoDB fixtures/matches, and keeps logs token-safe.
 
-## Automated
+## Commands And Results
 
-- `npm run verify`: Passed
-- Backend: 34 tests passed
-- Frontend: 15 tests passed
-- Frontend ESLint: Passed
-- Frontend production build: Passed
-- Server syntax checks: Passed
-- `git diff --check`: Passed with only Windows line-ending notices
-- Credential-pattern scan: No populated Sportmonks or MongoDB credentials found
-- Fallow Quality: `PARTIAL`, 83.4/B health score with reviewed non-blocking findings
+- `npm test`: passed, 38 backend tests.
+- `node --check server/providers/sportmonks/client.js`: passed.
+- `node --check server/sync/syncService.js`: passed.
+- `node --check server/sync/lockService.js`: passed.
+- `node --check server/tests/worker.test.js`: passed.
+- One-shot configured fixture sync: passed; Sportmonks `/fixtures` used `filter=fixtureSeasons:27897` on pages 1-6, fetched 132 fixtures, upserted 132 fixtures and 132 matches.
+- `npm run worker`: direct foreground run was bounded and timed out because the worker is long-running; redirected worker run verified startup and fixture sync logs.
+- `curl http://localhost:5000/api/v1/fixtures?limit=4`: passed, HTTP 200 with 4 fixture records and pagination total 132.
+- `npm test --prefix client`: passed, 15 frontend tests.
+- `git diff --check`: passed with line-ending warnings only.
+- `git diff --stat` and `git diff`: completed final diff audit.
+- `npx fallow audit --format json --quiet --explain`: passed.
 
-## Manual And Structural
+## Live Smoke Evidence
 
-- Reviewed the complete tracked diff and untracked implementation file list.
-- Confirmed the frontend API client targets CupPulse `/api/v1` only.
-- Confirmed `Procfile` separates web and worker processes.
-- Confirmed production mock fallback is disabled unless explicitly enabled.
-- Confirmed generated `client/dist` and local environment files are ignored.
+- Config presence check showed MongoDB, Sportmonks token, league ID, and season ID configured; no secret values were printed.
+- Season ID used: `27897`.
+- Worker logs included `Fixture sync started`, sanitized Sportmonks `/fixtures` params with `filter=fixtureSeasons:27897`, fetched count 132, and upsert counts 132/132.
+- API returned cached fixture data after sync.
 
-## Limitations
+## Security Notes
 
-- Browser smoke testing could not run because the in-app Browser reported no available connection.
-- Live Sportmonks and MongoDB Atlas calls were not executed because credentials were not provided.
+- No `.env` changes.
+- No token values printed in Sportmonks request logs.
+- `api_token` is excluded from logged params.
 
-## Credential-Free Deployment Smoke
+## Result
 
-Date: 2026-06-14
-
-- `NODE_ENV=production node server/server.js`: exited with the expected missing `MONGODB_URI` and `CLIENT_URL` error.
-- `node server/worker.js` without service configuration: exited with the expected MongoDB requirement error.
-- Development API started on port 5099 with mock fallback enabled.
-- `GET /health`: 200 with normalized live liveness metadata.
-- `GET /ready`: 503 with `SERVICE_NOT_READY` and `database: disconnected`.
-- `GET /api/v1/teams?limit=1`: 200 with normalized mock fallback data, stale metadata, and an explicit fallback reason.
-- `npm run verify`: passed again with 34 backend tests, 15 frontend tests, ESLint, and the production client build.
-- Heroku CLI authentication is valid, but this repository is not linked to a Heroku app and no CupPulse app exists in the authenticated account.
-- Temporary local API and Vite processes were stopped after verification.
-
-Result: Credential-free deployment behavior passed. Live Atlas connectivity, Sportmonks ingestion, worker synchronization, and deployed readiness remain unverified.
+Passed.

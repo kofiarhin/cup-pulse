@@ -2,61 +2,58 @@
 
 ## Request
 
-Implement the approved CupPulse production MVP foundation for a public 2026 FIFA Men's World Cup companion powered by Sportmonks and MongoDB Atlas.
-
-Applied skill: design-taste-frontend
+Fix Sportmonks fixture sync.
 
 ## User-Facing Changes
 
-- Added Home, Live Matches, Fixtures, Results, Standings, Knockout Bracket, Teams, Team Details, Players, Player Details, Match Details, Predictions, and Summaries.
-- Added responsive navigation, search, pagination, loading, empty, error, stale, cached, and mock indicators.
-- Added deterministic team/player-form predictions and article-style match summaries.
+- Upcoming fixtures now populate from Sportmonks-backed MongoDB cache after worker sync.
+- `/api/v1/fixtures?limit=4` returns non-empty fixture data after sync.
 
 ## Developer Changes
 
-- Added the normalized Express API, Mongoose models, Sportmonks client/normalizers, worker schedules, MongoDB locks, derived refresh, env validation, and deployment docs.
-- Added root `verify`, test, lint, build, web, and worker commands.
+- Fixture sync now sends Sportmonks `filter=fixtureSeasons:<seasonId>` instead of `filters`.
+- Sportmonks request logs show endpoint and sanitized params without `api_token`.
+- Fixture sync logs start, fetched count, upsert counts, and full failure messages.
+- Job locks and sync states now set stable `id` values to satisfy the shared model schema and avoid duplicate `id: null` failures.
+- Tests cover query serialization, sync parameter usage, diagnostics, failure logging, and lock/sync-state IDs.
 
-## New Routes And APIs
+## New Routes/APIs
 
-- Public frontend routes for every approved page.
-- Read-only `/api/v1` endpoints for competitions, teams, players, fixtures, matches, live matches, standings, venues, predictions, and summaries.
+None.
 
-## Environment Variables
+## New Env Vars
 
-- Required: `SPORTMONKS_API_TOKEN`, `MONGODB_URI`, `CLIENT_URL`, `NODE_ENV`, `PORT`
-- Provider IDs: `SPORTMONKS_LEAGUE_ID`, `SPORTMONKS_SEASON_ID`
-- Optional tuning: `ALLOW_MOCK_DATA`, `SPORTMONKS_BASE_URL`, `SPORTMONKS_TIMEOUT_MS`, `JOB_LOCK_TTL_MS`, and all refresh interval variables
-- Frontend: `VITE_API_BASE_URL`
+None.
 
-## Database And Schema
+## Database/Schema Changes
 
-Added normalized competitions, teams, players, fixtures, matches, standings, venues, predictions, summaries, sync states, and job locks.
+No schema migration. Worker writes now include required `id` values for `joblocks` and `syncstates`.
 
-## Dependencies
+## Dependencies Added/Removed
 
-- Frontend: React Router, TanStack Query, Phosphor icons, Tailwind Vite, Vitest, Testing Library, jsdom
-- Backend test tooling: Supertest
-- Removed dependencies: none
+None.
 
-## Verification
+## Test Commands Run
 
-- `npm run verify`: passed
-- 34 backend tests and 15 frontend tests passed
-- ESLint and production build passed
-- Fallow verdict: `PARTIAL` with reviewed non-blocking findings and health score 83.4/B
+- `npm test`
+- `npm test --prefix client`
+- `node --check server/providers/sportmonks/client.js`
+- `node --check server/sync/syncService.js`
+- `node --check server/sync/lockService.js`
+- `node --check server/tests/worker.test.js`
+- `git diff --check`
+- `npx fallow audit --format json --quiet --explain`
 
 ## Known Limitations
 
-- Browser smoke could not run because no in-app browser connection was available.
-- Live Sportmonks/Atlas smoke requires production credentials.
-- Socket.IO, admin, authentication, and personalization remain deferred.
+- Direct foreground `npm run worker` is a long-running worker process and hit the tool timeout; redirected logs verified the worker entrypoint and fixture sync.
+- Inherited Sportmonks client request complexity remains for a future cleanup.
 
 ## Follow-Up Work
 
-- Credentialed Heroku/Atlas/Sportmonks deployment smoke
-- Socket.IO and admin workflow after the core cache layer is operating
+- Consider a dedicated one-shot worker command for operational smoke tests.
+- Consider refactoring `server/providers/sportmonks/client.js` request internals separately.
 
 ## Suggested Commit Message
 
-`feat: implement CupPulse production MVP foundation`
+`fix: sync Sportmonks fixtures with singular filter`

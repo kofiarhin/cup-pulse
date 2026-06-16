@@ -1,36 +1,25 @@
-# Workflow Health Check
-
-Date: 2026-06-14
+# Workflow Health
 
 ## Status
 
 Passed
 
-Applied skill: design-taste-frontend
+## Checks
 
-## Artifact Checks
+- Request synced: yes.
+- Spec saved and approved before task planning: yes.
+- Task plan saved after approval: yes.
+- Tasks completed with Build/Refine/Polish evidence: yes.
+- Code-changing tasks include Red/Green/Refactor evidence or documented exceptions: yes.
+- Progress, handoff, review, verification, release notes, summary, and Fallow audit updated: yes.
+- Dirty worktree checked: yes.
+- Final diff audit completed: yes.
+- Tests and smoke verification recorded: yes.
+- Secrets check: no `.env` edits or token exposure.
+- Frontend taste skill: not applicable; no UI code changed.
+- Fallow verdict: PASSED.
 
-- Request, handoff, detailed spec, approved task plan, progress, verification, review, release notes, summary, and run brain exist.
-- The spec contains all required sections 1 through 22 plus the recorded frontend-taste section.
-- `.workflow/fallow-audit.md` exists with a justified `PARTIAL` verdict.
-- Run and project Project Brain JSON parse successfully; the projection reflects completed state.
-- Activity and checkpoints include intake, spec, plan, task, and workflow completion milestones.
-- Conflicts and custom categories remain valid and unchanged.
+## Notes
 
-## Process Checks
-
-- Explicit spec approval preceded task planning.
-- All seven tasks are `Done`.
-- Every task records three iterations and test-first evidence.
-- Acceptance results are complete.
-- Final diff and dirty-worktree audits were performed.
-- Frontend taste routing was limited to frontend work and recorded downstream.
-- Scope exclusions were preserved.
-
-## Verification Checks
-
-- 34 backend tests passed.
-- 15 frontend tests passed.
-- ESLint and production build passed.
-- Server syntax, JSON parsing, diff whitespace, and credential-pattern checks passed.
-- Browser and live-service smoke limitations are documented and do not leave approved implementation tasks incomplete.
+- Direct foreground `npm run worker` was bounded and timed out because the worker is long-running. Redirected worker logs verified the worker entrypoint and fixture sync.
+- Existing unrelated Node development processes were left untouched.
