@@ -1,37 +1,38 @@
-# Verification
+# Verification: Fixture Team Name Resolution
 
-## Request
+Date: 2026-06-16
 
-Fix Sportmonks fixture sync so `/fixtures` uses `filter=fixtureSeasons:27897`, writes MongoDB fixtures/matches, and keeps logs token-safe.
+## Automated Checks
 
-## Commands And Results
-
-- `npm test`: passed, 38 backend tests.
-- `node --check server/providers/sportmonks/client.js`: passed.
-- `node --check server/sync/syncService.js`: passed.
-- `node --check server/sync/lockService.js`: passed.
-- `node --check server/tests/worker.test.js`: passed.
-- One-shot configured fixture sync: passed; Sportmonks `/fixtures` used `filter=fixtureSeasons:27897` on pages 1-6, fetched 132 fixtures, upserted 132 fixtures and 132 matches.
-- `npm run worker`: direct foreground run was bounded and timed out because the worker is long-running; redirected worker run verified startup and fixture sync logs.
-- `curl http://localhost:5000/api/v1/fixtures?limit=4`: passed, HTTP 200 with 4 fixture records and pagination total 132.
-- `npm test --prefix client`: passed, 15 frontend tests.
+- `npm test`: passed, 42 backend tests.
+- `node --check server/services/dataService.js`: passed.
+- `npm test --prefix client`: passed, 17 frontend tests.
+- `npm run lint --prefix client`: passed.
+- `npm run build --prefix client`: passed.
+- `npm run verify`: passed.
 - `git diff --check`: passed with line-ending warnings only.
-- `git diff --stat` and `git diff`: completed final diff audit.
-- `npx fallow audit --format json --quiet --explain`: passed.
+- `cmd /c "npx fallow audit --format json --quiet --explain 2>NUL || exit /b 0"`: Fallow verdict passed.
 
-## Live Smoke Evidence
+## API Smoke
 
-- Config presence check showed MongoDB, Sportmonks token, league ID, and season ID configured; no secret values were printed.
-- Season ID used: `27897`.
-- Worker logs included `Fixture sync started`, sanitized Sportmonks `/fixtures` params with `filter=fixtureSeasons:27897`, fetched count 132, and upsert counts 132/132.
-- API returned cached fixture data after sync.
+Started the API with `node server/server.js`, queried `http://localhost:5000/api/v1/fixtures?limit=4`, then stopped the process.
 
-## Security Notes
+Returned fixtures included populated team names and logos:
 
-- No `.env` changes.
-- No token values printed in Sportmonks request logs.
-- `api_token` is excluded from logged params.
+- `fixture-19714016`: `Viborg FF` vs `Odense BK`
+- `fixture-19714015`: `AGF` vs `Brondby IF`
+- `fixture-19714014`: `Sonderjyske Fodbold` vs `FC Midtjylland`
+- `fixture-19714013`: `Randers FC` vs `Silkeborg IF`
 
-## Result
+## Acceptance Evidence
 
-Passed.
+- [x] Upcoming fixture API records return real club names.
+- [x] Fixture cards use populated team names from the API.
+- [x] Team logos render when present.
+- [x] Fallback behavior remains available when names or logos are missing.
+- [x] Fixture sync logs fetched fixture count, extracted team count, and upserted team count.
+- [x] Team records are upserted during fixture sync.
+
+## Notes
+
+The in-app Browser connector was not available for this run, so UI verification used Vitest, lint, production build, and API smoke evidence.

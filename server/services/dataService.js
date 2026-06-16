@@ -38,6 +38,69 @@ function toPlain(record) {
   return normalized;
 }
 
+function sideField(side, field) {
+  return `${side}Team${field}`;
+}
+
+function fallbackValue(...values) {
+  return values.find(Boolean) || null;
+}
+
+function teamDisplay(record, side, teamMap) {
+  const id = record[sideField(side, "Id")];
+  const team = teamMap.get(id) || {};
+
+  return {
+    id: fallbackValue(id),
+    name: fallbackValue(record[sideField(side, "Name")], team.name, id),
+    logo: fallbackValue(record[sideField(side, "Logo")], team.crestUrl),
+  };
+}
+
+function teamIdsFor(records) {
+  const ids = new Set();
+  for (const record of records) {
+    if (record.homeTeamId) ids.add(record.homeTeamId);
+    if (record.awayTeamId) ids.add(record.awayTeamId);
+  }
+  return [...ids];
+}
+
+async function teamMapFor(records) {
+  const ids = teamIdsFor(records);
+  if (ids.length === 0) {
+    return new Map();
+  }
+
+  const teams = await models.teams.find({ id: { $in: ids } }).lean();
+  return new Map(teams.map((team) => [team.id, team]));
+}
+
+function supportsTeamEnrichment(collection) {
+  return ["fixtures", "matches"].includes(collection);
+}
+
+async function serializeRecords(collection, records) {
+  if (!supportsTeamEnrichment(collection)) {
+    return records.map(toPlain);
+  }
+
+  const teamMap = await teamMapFor(records);
+  return records.map((record) => {
+    const plain = toPlain(record);
+    return {
+      ...plain,
+      homeTeam: teamDisplay(record, "home", teamMap),
+      awayTeam: teamDisplay(record, "away", teamMap),
+    };
+  });
+}
+
+async function serializeRecord(collection, record) {
+  const [serialized] = await serializeRecords(collection, [record]);
+  return serialized;
+}
+
 function buildMeta({ source, syncedAt, fallbackReason }) {
   const reference = syncedAt ? new Date(syncedAt) : new Date(generatedAt);
   const ageSeconds = Math.max(
@@ -154,7 +217,7 @@ function createDataService({
       );
 
       return {
-        data: records.map(toPlain),
+        data: await serializeRecords(collection, records),
         pagination: {
           page,
           limit,
@@ -228,7 +291,10 @@ function createDataService({
     }
 
     return {
-      data: toPlain(record),
+      data:
+        databaseStatus() === "connected"
+          ? await serializeRecord(collection, record)
+          : toPlain(record),
       meta: buildMeta({
         source: databaseStatus() === "connected" ? "cached" : "mock",
         syncedAt: record.syncedAt,
@@ -247,7 +313,5 @@ function createDataService({
 }
 
 module.exports = {
-  buildFilter,
   createDataService,
-  parsePagination,
 };

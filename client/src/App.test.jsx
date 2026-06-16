@@ -18,6 +18,14 @@ function renderRoute(route) {
   );
 }
 
+function fixtureResponse(data) {
+  return {
+    data,
+    meta: { source: "cached", stale: false, generatedAt: new Date().toISOString() },
+    pagination: { page: 1, limit: 20, total: data.length, pages: data.length ? 1 : 0 },
+  };
+}
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
@@ -104,6 +112,69 @@ describe("CupPulse public routes", () => {
     expect(
       await screen.findByRole("searchbox", { name: /search fixtures/i }),
     ).toBeInTheDocument();
+  });
+
+  it("renders fixture team names and logos from populated API teams", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () =>
+        fixtureResponse([
+          {
+            id: "fixture-200",
+            status: "scheduled",
+            homeTeamId: "team-2447",
+            awayTeamId: "team-1789",
+            homeTeam: {
+              id: "team-2447",
+              name: "FC Copenhagen",
+              logo: "https://cdn.example/fck.png",
+            },
+            awayTeam: {
+              id: "team-1789",
+              name: "Brondby",
+              logo: "https://cdn.example/brondby.png",
+            },
+            score: { home: null, away: null },
+          },
+        ]),
+    });
+
+    const { container } = renderRoute("/fixtures");
+
+    expect(await screen.findByText("FC Copenhagen")).toBeInTheDocument();
+    expect(await screen.findByText("Brondby")).toBeInTheDocument();
+    expect(screen.queryByText("team-2447")).not.toBeInTheDocument();
+    expect(
+      container.querySelector('img[src="https://cdn.example/fck.png"]'),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('img[src="https://cdn.example/brondby.png"]'),
+    ).toBeInTheDocument();
+  });
+
+  it("renders persisted fixture team names without broken logos", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () =>
+        fixtureResponse([
+          {
+            id: "fixture-201",
+            status: "scheduled",
+            homeTeamId: "team-2905",
+            awayTeamId: "team-1789",
+            homeTeamName: "Seattle Sounders",
+            awayTeamName: "Brondby",
+            score: { home: null, away: null },
+          },
+        ]),
+    });
+
+    const { container } = renderRoute("/fixtures");
+
+    expect(await screen.findByText("Seattle Sounders")).toBeInTheDocument();
+    expect(await screen.findByText("Brondby")).toBeInTheDocument();
+    expect(screen.queryByText("team-2905")).not.toBeInTheDocument();
+    expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 
   it("exposes match score as a named region", async () => {

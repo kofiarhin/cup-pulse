@@ -92,3 +92,51 @@ Activity
 - Artifact: updated `_workflow/runs/dev/verification.md`, `_workflow/runs/dev/review.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
 - Checkpoint: saved
 - Next: commit and deploy the worker fix
+## 2026-06-16T05:57:51+01:00
+
+Activity
+- Stage: complete -> spec approval gate
+- Memory: added run-local fixture team resolution request, assumptions, risks, and acceptance criteria
+- Artifact: updated `_workflow/runs/dev/request.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/spec.md`
+- Checkpoint: saved
+- Next: wait for explicit spec approval
+## 2026-06-16T06:08:00+01:00
+
+Activity
+- Stage: spec approval gate -> planning complete
+- Memory: updated approval status and task sequencing
+- Artifact: updated `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: start TASK-001 Iteration 1 Red
+## 2026-06-16T06:18:00+01:00
+
+Activity
+- Stage: TASK-001 -> TASK-002
+- Memory: recorded TASK-001 completion and backend ingestion evidence
+- Artifact: updated `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: start TASK-002 Iteration 1 Red
+## 2026-06-16T06:28:00+01:00
+
+Activity
+- Stage: TASK-002 -> TASK-003
+- Memory: recorded API enrichment completion and serializer evidence
+- Artifact: updated `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: start TASK-003 Iteration 1 Red
+## 2026-06-16T06:38:00+01:00
+
+Activity
+- Stage: TASK-003 -> final review
+- Memory: recorded frontend fixture-card completion and local API smoke
+- Artifact: updated `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: final diff audit and review
+## 2026-06-16T06:33:30+01:00
+
+Activity
+- Stage: final review -> complete
+- Memory: recorded completed workflow, passing Fallow gate, and final verification evidence
+- Artifact: updated `_workflow/runs/dev/review.md`, `_workflow/runs/dev/verification.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
+- Checkpoint: saved
+- Next: commit and deploy the fix

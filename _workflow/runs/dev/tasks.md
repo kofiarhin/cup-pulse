@@ -1,185 +1,208 @@
-# Task Plan: Fix Sportmonks Fixture Sync
+# Task Plan: Fix Fixture Team Name Resolution
 
 - Spec file used: `_workflow/runs/dev/spec.md`
 - Planning date: 2026-06-16
-- Progress and summary files read: `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`
-- Spec sections used: 5 Current State Analysis, 6 Desired End State, 9 Functional Requirements, 11 Affected Surfaces, 12 Dependency And Integration Map, 14 UX / API / Workflow Expectations, 15 Execution Strategy, 16 Verification Strategy, 17 Acceptance Criteria, 18 Edge Cases And Failure Modes, 19 Risks And Mitigations, 20 Assumptions, 22 Task Extraction Notes.
+- Spec approval: approved by user prompt `approve spec`
+- Progress file read: `_workflow/runs/dev/progress.md`
+- Summary file read: `_workflow/runs/dev/summary.md`
+- Handoff file read: `_workflow/runs/dev/handoff.md`
+- Detailed spec sections used: 5 Current State Analysis, 11 Affected Surfaces, 12 Dependency And Integration Map, 13 Data And State Impact, 14 UX / API / Workflow Expectations, 15 Execution Strategy, 16 Verification Strategy, 17 Acceptance Criteria, 18 Edge Cases And Failure Modes, 19 Risks And Mitigations, 20 Assumptions, 22 Task Extraction Notes.
 
-## TASK-001: Prove and fix fixture season filter serialization
+## Task List
 
-- Status: Done
-- Objective: Ensure fixture sync sends `filter=fixtureSeasons:<seasonId>` and never sends `filters`.
-- Files likely affected: `server/sync/syncService.js`, `server/providers/sportmonks/client.js`, `server/tests/worker.test.js`
-- Checklist:
-  - [x] Add failing coverage for Sportmonks client query serialization with `filter`.
-  - [x] Add failing coverage for `syncFixtures()` passing `filter` and not `filters`.
-  - [x] Replace fixture sync `filters` parameter with `filter`.
-  - [x] Preserve existing page-number pagination.
-  - [x] Run relevant tests after Red, Green, and Refactor.
-- Iteration 1 Build:
-  - Goal: Create failing tests that expose the plural `filters` regression.
-  - Changes made: added Sportmonks client serialization coverage and sync-service parameter assertions.
-  - Test plan: run `npm test` before implementation and capture expected failure.
-  - Red phase evidence: `npm test` failed because `fetchCalls[0].parameters.filter` was undefined while the test expected `fixtureSeasons:2026`.
-  - Green phase evidence: replaced `filters` with `filter`; `npm test` passed with 35 tests.
-  - Refactor phase evidence: no behavior-preserving refactor needed; syntax checks for changed files passed.
-  - Test commands run: `npm test`; `node --check server/providers/sportmonks/client.js`; `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`.
-  - Verification command/result: `npm test` passed.
-  - Review findings: the diff is narrow and existing page-number pagination remains unchanged.
-  - Acceptance status: accepted.
-  - Remaining issues: diagnostics still pending in TASK-002.
-  - Next action: start TASK-002.
-- Iteration 2 Refine:
-  - Goal: Confirm pagination and detailed fixture sync continue to use the same filter behavior.
-  - Changes made: confirmed the existing pagination test still passes with the new filter assertions.
-  - Test plan: targeted backend tests.
-  - Red phase evidence: no additional failing test needed; the Red test from Iteration 1 already covered the regression.
-  - Green phase evidence: `npm test` passed and retained `Sportmonks client authenticates and follows pagination`.
-  - Refactor phase evidence: no pagination code changed.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed, 35 tests.
-  - Review findings: detailed and standard fixture sync share the same filter code path.
-  - Acceptance status: accepted.
-  - Remaining issues: diagnostics still pending in TASK-002.
-  - Next action: prepare diagnostics task.
-- Iteration 3 Polish:
-  - Goal: Check token-safety and narrow diff for query serialization.
-  - Changes made: reviewed the source diff and ran syntax checks.
-  - Test plan: backend tests and syntax check.
-  - Red phase evidence: no additional failing test needed; this pass was polish-only after the accepted Green fix.
-  - Green phase evidence: syntax checks passed for client, sync service, and worker tests.
-  - Refactor phase evidence: no refactor required.
-  - Test commands run: `node --check server/providers/sportmonks/client.js`; `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`.
-  - Verification command/result: passed.
-  - Review findings: no token exposure was introduced; tests use dummy token only.
-  - Acceptance status: accepted.
-  - Remaining issues: none for TASK-001.
-  - Next action: TASK-002.
-- Acceptance criteria:
-  - [x] Client test proves `filter` is emitted.
-  - [x] Client/sync tests prove `filters` is absent.
-  - [x] Existing pagination test still passes.
-- Acceptance result: accepted.
-- Verification commands: `npm test`
-- Stop condition: tests cannot prove the query key or implementation would require broad provider refactor.
-- Out-of-scope items: public API/frontend changes, env edits, schema changes.
-
-## TASK-002: Add token-safe fixture sync diagnostics
+### TASK-001: Store fixture participant team details
 
 - Status: Done
-- Objective: Add useful logs for fixture sync start, endpoint/params excluding token, fetched count, upsert counts, and full failure messages.
-- Files likely affected: `server/providers/sportmonks/client.js`, `server/sync/syncService.js`, `server/tests/worker.test.js`
+- Objective: Extract home/away participant names and logos from Sportmonks fixtures, persist them on Fixture/Match records, upsert Team records from fixture participants, and log fetched/extracted/upserted counts.
+- Files likely affected: `server/providers/sportmonks/normalizers.js`, `server/sync/syncService.js`, `server/models/index.js`, `server/tests/worker.test.js`
 - Checklist:
-  - [x] Add injectable logger or request hook without exposing `api_token`.
-  - [x] Log fixture sync start.
-  - [x] Log Sportmonks endpoint/params excluding token.
-  - [x] Log fixtures fetched.
-  - [x] Log fixtures and matches upserted.
-  - [x] Log sync failures with full error message.
-  - [x] Add/adjust tests for logging behavior.
+  - [x] Add failing tests for fixture participant name/logo extraction.
+  - [x] Add failing tests for Team upserts and sync team-count logs.
+  - [x] Add optional Fixture/Match fields for home/away names/logos.
+  - [x] Extend normalizer to extract display team data without raw payloads.
+  - [x] Upsert extracted Team records during fixture sync.
+  - [x] Preserve fallback behavior when names are missing.
 - Iteration 1 Build:
-  - Goal: Add failing diagnostics coverage.
-  - Changes made: added tests for sanitized client request logs and fixture sync start/fetch/upsert logs.
-  - Test plan: backend tests.
-  - Red phase evidence: `npm test` failed because no sanitized client request logs or fixture sync start/count logs were emitted.
-  - Green phase evidence: added logger support to the Sportmonks client and sync service; `npm test` passed.
-  - Refactor phase evidence: added silent logger injection to non-diagnostic tests to keep output clean.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed with 38 backend tests.
-  - Review findings: logged request params exclude `api_token` and token values.
-  - Acceptance status: accepted.
-  - Remaining issues: live verification still pending.
-  - Next action: verify failure logging.
-- Iteration 2 Refine:
-  - Goal: Verify failure logging and sync-state behavior.
-  - Changes made: added explicit failure-path coverage for fixture sync error logs.
-  - Test plan: targeted failure-path test and backend tests.
-  - Red phase evidence: no separate Red captured because failure logging was implemented with the diagnostics hook; coverage was added immediately afterward.
-  - Green phase evidence: failure-path test passed and asserted full message `Sportmonks fixture request failed with status 400`.
-  - Refactor phase evidence: no refactor required.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed with 38 backend tests.
-  - Review findings: sync-state failure path still rethrows after logging and updating sync state.
-  - Acceptance status: accepted with documented Red-sequencing exception for the follow-up failure-path assertion.
-  - Remaining issues: none for diagnostics.
-  - Next action: polish token-safety.
-- Iteration 3 Polish:
-  - Goal: Confirm diagnostics are readable and token-safe.
-  - Changes made: ran syntax checks and reviewed token-sensitive diff.
-  - Test plan: backend tests, syntax check, credential-pattern review.
-  - Red phase evidence: not applicable; polish-only after accepted diagnostics implementation.
-  - Green phase evidence: syntax checks passed for client, sync service, and worker tests.
-  - Refactor phase evidence: no further refactor required.
-  - Test commands run: `npm test`; `node --check server/providers/sportmonks/client.js`; `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`.
-  - Verification command/result: passed.
-  - Review findings: logs are structured and token-safe; no `.env` edits.
-  - Acceptance status: accepted.
-  - Remaining issues: none for TASK-002.
-  - Next action: TASK-003.
-- Acceptance criteria:
-  - [x] Requested diagnostic events exist.
-  - [x] Logs never include `api_token` or configured token values.
-  - [x] Failure logs include full error message.
-- Acceptance result: accepted.
-- Verification commands: `npm test`, `node --check server/providers/sportmonks/client.js`, `node --check server/sync/syncService.js`
-- Stop condition: safe diagnostics require changing unrelated worker architecture.
-- Out-of-scope items: observability vendor integration, persistent log storage.
-
-## TASK-003: Verify worker/API fixture population or document live-service blocker
-
-- Status: Done
-- Objective: Run final automated verification and attempt the requested live worker/API fixture smoke.
-- Files likely affected: workflow artifacts only unless a verification defect is found.
-- Checklist:
-  - [x] Run `npm test`.
-  - [x] Attempt `npm run worker` with a bounded timeout.
-  - [x] Attempt `curl http://localhost:5000/api/v1/fixtures?limit=4` when an API server is available or start one if safe.
-  - [x] Check diff for token or `.env` exposure.
-  - [x] Run final diff audit, review, Fallow, release notes, summary, and health check.
-- Iteration 1 Build:
-  - Goal: Prove automated backend tests pass.
-  - Changes made: no planned code changes; recovery added required `id` values for `JobLock` and `SyncState` after live verification exposed duplicate `id: null` blockers.
+  - Goal: prove participant names/logos are currently discarded.
+  - Changes made: added failing normalizer and sync tests, then persisted `homeTeamName`, `awayTeamName`, `homeTeamLogo`, and `awayTeamLogo` and emitted extracted `teams`.
   - Test plan: `npm test`.
-  - Red phase evidence: live one-shot fixture sync failed with MongoDB duplicate `id: null` on `syncstates`; added tests then failed because lock and sync-state updates did not set stable `id` fields.
-  - Green phase evidence: `lockService` now sets `id: key` and sync state updates set `id: job`; `npm test` passed with 38 backend tests.
-  - Refactor phase evidence: refactored `syncService.js` helper structure after Fallow initially reported introduced complexity; tests stayed green.
-  - Test commands run: `npm test`; `node --check server/sync/syncService.js`; `node --check server/sync/lockService.js`.
+  - Red phase evidence: `npm test` failed with `fixture normalizer extracts participant team names and logos` and `fixture synchronization upserts participant teams and logs team counts`; expected `FC Copenhagen` but actual was `undefined`.
+  - Green phase evidence: `npm test` passed with 40 backend tests after normalizer/model/sync changes.
+  - Refactor phase evidence: removed redundant participant ID lookup helper and reran `npm test`; 40 backend tests passed.
+  - Test commands run: `npm test`.
   - Verification command/result: passed.
-  - Review findings: recovery is in-scope because worker locks and sync states blocked fixture writes before Sportmonks fetch/upsert.
-  - Acceptance status: accepted.
-  - Remaining issues: direct foreground `npm run worker` is a long-running process and hit tool timeout; redirected worker logs verified the entrypoint.
-  - Next action: run worker smoke.
+  - Review findings: provider data stays normalized; raw payloads and tokens are not exposed.
+  - Acceptance status: complete for TASK-001.
+  - Remaining issues: API responses and UI display still pending in later tasks.
+  - Next action: TASK-002.
 - Iteration 2 Refine:
-  - Goal: Attempt worker execution and capture whether fixtures sync can run locally.
-  - Changes made: ran one-shot sync through configured Sportmonks client and sync service, then ran real worker entrypoint with redirected logs.
-  - Test plan: bounded `npm run worker`.
-  - Red phase evidence: the first one-shot sync failed on duplicate `id: null`; fixed in Iteration 1.
-  - Green phase evidence: one-shot sync fetched 132 fixtures with `filter=fixtureSeasons:27897` across pages 1-6 and upserted 132 fixtures plus 132 matches.
-  - Refactor phase evidence: no further source refactor required after Fallow cleanup.
-  - Test commands run: one-shot sync script; redirected `npm run worker` smoke.
-  - Verification command/result: worker logs showed `CupPulse Sportmonks worker started`, `/fixtures` requests with singular `filter`, 132 fetched, and 132/132 upserted.
-  - Review findings: logs exclude token values and `api_token`.
-  - Acceptance status: accepted.
-  - Remaining issues: none.
-  - Next action: API curl smoke.
+  - Goal: prove extracted teams are upserted and counted in logs.
+  - Changes made: covered team extraction/upsert behavior in the first iteration because it shares the same sync path.
+  - Test plan: `npm test`.
+  - Red phase evidence: the new sync test failed before implementation because fixture writes had no team names and Team bulk writes were absent.
+  - Green phase evidence: `npm test` passed after `upsertFixtureTeams()` deduplicated and upserted extracted participant teams.
+  - Refactor phase evidence: no additional source refactor was needed beyond the normalizer cleanup; backend tests stayed green.
+  - Test commands run: `npm test`.
+  - Verification command/result: passed.
+  - Review findings: Team upserts filter out records without both ID and name, preserving fallback behavior.
+  - Acceptance status: complete for TASK-001.
+  - Remaining issues: API enrichment still pending.
+  - Next action: TASK-002.
 - Iteration 3 Polish:
-  - Goal: Attempt API fixture curl and complete quality artifacts.
-  - Changes made: started API server, ran curl smoke, ran frontend tests, final diff audit, Fallow audit, and process cleanup.
-  - Test plan: curl smoke plus final quality commands.
-  - Red phase evidence: initial API smoke before sync returned `dataLength: 0`; after sync, curl returned four fixture records.
-  - Green phase evidence: `curl http://localhost:5000/api/v1/fixtures?limit=4` returned HTTP 200 with `data` length 4 and pagination total 132.
-  - Refactor phase evidence: removed duplicate `logger` test property after diff review; tests and Fallow stayed green.
-  - Test commands run: `curl.exe -s -m 15 -w ... http://localhost:5000/api/v1/fixtures?limit=4`; `npm test --prefix client`; `git diff --check`; `git diff --stat`; `git diff`; `npx fallow audit --format json --quiet --explain`.
-  - Verification command/result: all passed; Fallow verdict `pass`.
-  - Review findings: no `.env` changes, no token exposure, and temporary smoke processes were stopped.
-  - Acceptance status: accepted.
-  - Remaining issues: inherited Fallow complexity hotspot in `server/providers/sportmonks/client.js` remains non-blocking and not introduced by this change.
-  - Next action: final handoff.
+  - Goal: verify syntax, token-safe logs, and fallback behavior.
+  - Changes made: ran syntax checks on all TASK-001 changed backend files.
+  - Test plan: `npm test`, targeted `node --check`.
+  - Red phase evidence: not applicable for syntax-only polish; prior Red tests covered the behavior.
+  - Green phase evidence: targeted `node --check` commands passed.
+  - Refactor phase evidence: no additional refactor required.
+  - Test commands run: `node --check server/providers/sportmonks/normalizers.js`; `node --check server/sync/syncService.js`; `node --check server/models/index.js`; `node --check server/tests/worker.test.js`.
+  - Verification command/result: passed.
+  - Review findings: optional schema fields avoid migration risk; logs count teams without credentials.
+  - Acceptance status: complete for TASK-001.
+  - Remaining issues: none for this task.
+  - Next action: TASK-002.
+- Test plan: backend normalizer/sync tests.
+- Red phase evidence: `npm test` failed on the new participant extraction and team-upsert assertions.
+- Green phase evidence: `npm test` passed with 40 backend tests.
+- Refactor phase evidence: normalizer cleanup kept `npm test` green.
+- Test commands run: `npm test`; `node --check server/providers/sportmonks/normalizers.js`; `node --check server/sync/syncService.js`; `node --check server/models/index.js`; `node --check server/tests/worker.test.js`
 - Acceptance criteria:
-  - [x] `npm test` passes.
-  - [x] Live worker/API smoke passes or blocker is documented.
-  - [x] Final diff audit finds no token or `.env` exposure.
-- Acceptance result: accepted.
-- Verification commands: `npm test`, `npm run worker`, `curl http://localhost:5000/api/v1/fixtures?limit=4`, `git diff --stat`, `git diff`
-- Stop condition: live credentials/services are unavailable or verification reveals unfixable in-scope failure.
-- Out-of-scope items: deployment, committing, manual database mutation.
+  - [x] Fixture participant names/logos are persisted when available.
+  - [x] Team records are upserted from fixture participants.
+  - [x] Fixture sync logs fetched fixtures, teams extracted, and teams upserted.
+  - [x] Missing names still fall back to team IDs.
+- Acceptance result: complete.
+- Verification commands: `npm test`; `node --check server/providers/sportmonks/normalizers.js`; `node --check server/sync/syncService.js`; `node --check server/models/index.js`; `node --check server/tests/worker.test.js`
+- Stop condition: backend tests cannot prove safe sync behavior.
+- Out-of-scope items: API serialization, frontend display.
+
+### TASK-002: Return populated fixture teams from the API
+
+- Status: Done
+- Objective: Enrich fixture and match API responses with `homeTeam` and `awayTeam` objects containing names/logos, while preserving sanitized public output and avoiding N+1 lookups.
+- Files likely affected: `server/services/dataService.js`, `server/tests/api.test.js`
+- Checklist:
+  - [x] Add failing API test for `/api/v1/fixtures` populated teams.
+  - [x] Add fallback test for missing team names.
+  - [x] Batch-load Team records for fixture/match list records when MongoDB is connected.
+  - [x] Enrich detail responses for matches.
+  - [x] Keep provider/internal fields stripped.
+- Iteration 1 Build:
+  - Goal: prove fixture API currently returns IDs without populated team names.
+  - Changes made: added connected-path fixture API test and batched Team enrichment in `dataService`.
+  - Test plan: `npm test`.
+  - Red phase evidence: `npm test` failed because `response.body.data[0].homeTeam` was `undefined`.
+  - Green phase evidence: `npm test` passed with 41 backend tests after adding team enrichment.
+  - Refactor phase evidence: scoped detail enrichment to connected database records so mock fallback does not query Mongoose while disconnected.
+  - Test commands run: `npm test`.
+  - Verification command/result: passed.
+  - Review findings: Team records are batch-loaded once per list; nested team output strips provider fields.
+  - Acceptance status: complete for fixture API list enrichment.
+  - Remaining issues: frontend display pending.
+  - Next action: TASK-003.
+- Iteration 2 Refine:
+  - Goal: cover match list/detail enrichment and fallback sanitization.
+  - Changes made: added match detail fallback test for persisted team display fields.
+  - Test plan: `npm test`.
+  - Red phase evidence: not separately failing because the Iteration 1 implementation already covered the shared detail serializer path; added focused regression coverage immediately afterward.
+  - Green phase evidence: `npm test` passed with 42 backend tests.
+  - Refactor phase evidence: no further refactor required.
+  - Test commands run: `npm test`.
+  - Verification command/result: passed.
+  - Review findings: persisted name/logo fields cover stale or missing Team collection lookups.
+  - Acceptance status: complete.
+  - Remaining issues: frontend display pending.
+  - Next action: TASK-003.
+- Iteration 3 Polish:
+  - Goal: verify performance shape and syntax.
+  - Changes made: ran syntax checks on TASK-002 changed backend files.
+  - Test plan: `npm test`, targeted `node --check`.
+  - Red phase evidence: not applicable for syntax-only polish; behavior Red was captured in Iteration 1.
+  - Green phase evidence: targeted `node --check` commands passed.
+  - Refactor phase evidence: no further refactor required.
+  - Test commands run: `node --check server/services/dataService.js`; `node --check server/tests/api.test.js`.
+  - Verification command/result: passed.
+  - Review findings: enrichment avoids per-record Team queries and does not affect disconnected mock list responses.
+  - Acceptance status: complete.
+  - Remaining issues: none for this task.
+  - Next action: TASK-003.
+- Test plan: backend API tests.
+- Red phase evidence: `npm test` failed because connected `/api/v1/fixtures` returned no `homeTeam`.
+- Green phase evidence: `npm test` passed with 42 backend tests after serializer enrichment and fallback coverage.
+- Refactor phase evidence: connected-only detail enrichment preserved mock fallback behavior.
+- Test commands run: `npm test`; `node --check server/services/dataService.js`; `node --check server/tests/api.test.js`
+- Acceptance criteria:
+  - [x] `/api/v1/fixtures` returns `homeTeam.name` and `awayTeam.name` when known.
+  - [x] `/api/v1/matches` and match detail responses remain compatible and enriched.
+  - [x] Provider/internal fields remain private.
+  - [x] Fallback `team-${id}` appears only when names are unavailable.
+- Acceptance result: complete.
+- Verification commands: `npm test`; `node --check server/services/dataService.js`; `node --check server/tests/api.test.js`
+- Stop condition: API enrichment cannot be verified without unsafe query behavior.
+- Out-of-scope items: fixture sync and frontend UI.
+
+### TASK-003: Display fixture names and logos in match cards
+
+- Status: Done
+- Objective: Update shared fixture/match cards to render API-provided team names and logos when available, with stable layout and accessible fallbacks.
+- Applied skill: design-taste-frontend
+- Files likely affected: `client/src/components/MatchList.jsx`, `client/src/App.test.jsx`
+- Checklist:
+  - [x] Add failing frontend test for real team names/logos in fixture cards.
+  - [x] Render logos when `homeTeam.logo`, `homeTeamLogo`, `awayTeam.logo`, or `awayTeamLogo` exists.
+  - [x] Keep text fallback order: team object name, persisted name, team ID, To be confirmed.
+  - [x] Avoid broken image/layout shift when logos are missing.
+  - [x] Run client tests, lint, and build.
+- Iteration 1 Build:
+  - Goal: prove card display can render real team names/logos from API shape.
+  - Changes made: added failing route test for populated fixture team names/logos, then added logo rendering to `MatchList`.
+  - Test plan: `npm test --prefix client`.
+  - Red phase evidence: `npm test --prefix client` failed because the expected logo `<img>` was `null`.
+  - Green phase evidence: `npm test --prefix client` passed with 16 tests after adding fixed-size logo slots.
+  - Refactor phase evidence: replaced the small component cleanly after mojibake prevented a targeted patch; behavior stayed scoped.
+  - Test commands run: `npm test --prefix client`.
+  - Verification command/result: passed.
+  - Review findings: names already used API precedence; logo slot adds no new dependency.
+  - Acceptance status: complete for logo/name display.
+  - Remaining issues: none.
+  - Next action: refinement.
+- Iteration 2 Refine:
+  - Goal: validate missing-logo and fallback behavior.
+  - Changes made: added persisted-name/no-logo fallback test.
+  - Test plan: `npm test --prefix client`.
+  - Red phase evidence: no separate failing Red because the Green implementation already satisfied the fallback path; added explicit regression coverage immediately afterward.
+  - Green phase evidence: `npm test --prefix client` passed with 17 tests.
+  - Refactor phase evidence: no further source refactor required.
+  - Test commands run: `npm test --prefix client`.
+  - Verification command/result: passed.
+  - Review findings: missing logos do not render broken image elements.
+  - Acceptance status: complete.
+  - Remaining issues: none.
+  - Next action: polish verification.
+- Iteration 3 Polish:
+  - Goal: final UI quality, lint, build, and full verification.
+  - Changes made: ran client tests, lint, build, full repository verification, `git diff --check`, and localhost API smoke.
+  - Test plan: `npm test --prefix client`, `npm run lint --prefix client`, `npm run build --prefix client`, `npm run verify`.
+  - Red phase evidence: not applicable for polish-only verification; behavior Red was captured in Iteration 1.
+  - Green phase evidence: full verification and API smoke passed.
+  - Refactor phase evidence: no further refactor required.
+  - Test commands run: `npm test --prefix client`; `npm run lint --prefix client`; `npm run build --prefix client`; `npm run verify`; `git diff --check`; `Invoke-RestMethod http://localhost:5000/api/v1/fixtures?limit=4`.
+  - Verification command/result: passed; API smoke returned real team names and logos.
+  - Review findings: Applied skill: design-taste-frontend; Browser connector unavailable, automated UI route tests/lint/build used as fallback.
+  - Acceptance status: complete.
+  - Remaining issues: none.
+  - Next action: final review.
+- Test plan: frontend route/component tests plus full repository verification.
+- Red phase evidence: `npm test --prefix client` failed because expected fixture logo images were absent.
+- Green phase evidence: client tests passed with 17 tests after rendering logo slots and fallback coverage.
+- Refactor phase evidence: full repository verification passed after scoped component cleanup.
+- Test commands run: `npm test --prefix client`; `npm run lint --prefix client`; `npm run build --prefix client`; `npm run verify`; `git diff --check`; local API smoke.
+- Acceptance criteria:
+  - [x] Upcoming fixture cards display real names.
+  - [x] Fixture cards show logos when available.
+  - [x] No card shows `team-XXXX` when a name exists.
+  - [x] UI remains responsive and accessible.
+- Acceptance result: complete.
+- Verification commands: `npm test --prefix client`; `npm run lint --prefix client`; `npm run build --prefix client`; `npm run verify`; `git diff --check`
+- Stop condition: frontend tests/build cannot verify the display change.
+- Out-of-scope items: broad redesign, new dependencies, animation-heavy changes.

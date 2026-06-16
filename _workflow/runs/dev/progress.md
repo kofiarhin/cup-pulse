@@ -290,3 +290,100 @@ No implementation tasks have started. Intake is complete and the workflow is wai
   - [x] Final diff audit finds no token or `.env` exposure.
 - Failure recovery: fixed live MongoDB `id: null` blockers for `syncstates` and `joblocks`; refactored introduced complexity until Fallow passed.
 - Next: final review, Fallow report, release notes, summary, and handoff complete.
+## Fixture Team Name Resolution - TASK-001 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Files changed: `server/providers/sportmonks/normalizers.js`, `server/sync/syncService.js`, `server/models/index.js`, `server/tests/worker.test.js`, `_workflow/runs/dev/tasks.md`
+- Iteration 1 Build:
+  - Goal: prove fixture participant names/logos are discarded and then persist them.
+  - Red: `npm test` failed on the new participant extraction test; `homeTeamName` was `undefined` instead of `FC Copenhagen`.
+  - Green: added optional Fixture/Match name/logo fields, participant display extraction, and normalized fixture `teams`; `npm test` passed with 40 backend tests.
+  - Refactor: removed redundant participant ID lookup and reran `npm test`; 40 tests passed.
+  - Verification: `npm test` passed.
+  - Review: raw Sportmonks payloads remain omitted; provider IDs remain internal.
+- Iteration 2 Refine:
+  - Goal: prove fixture sync upserts participant Team records and logs team counts.
+  - Red: `npm test` failed on the new sync test because fixture writes had no names and Team bulk writes/logs were absent.
+  - Green: added deduplicated fixture Team extraction/upsert and `Fixture sync extracted teams` / `Fixture sync upserted teams` logs; `npm test` passed.
+  - Refactor: no additional refactor needed beyond the normalizer cleanup.
+  - Verification: `npm test` passed.
+  - Review: teams without both ID and name are skipped for Team upsert, preserving fallback behavior.
+- Iteration 3 Polish:
+  - Goal: syntax and token-safety check.
+  - Red: not applicable for syntax-only polish; behavior Red was covered in Iterations 1 and 2.
+  - Green: targeted syntax checks passed.
+  - Refactor: no further refactor required.
+  - Verification: `node --check server/providers/sportmonks/normalizers.js`, `node --check server/sync/syncService.js`, `node --check server/models/index.js`, and `node --check server/tests/worker.test.js` passed.
+  - Review: sync logs expose counts only and do not include `api_token` or token values.
+- Acceptance:
+  - [x] Fixture participant names/logos are persisted when available.
+  - [x] Team records are upserted from fixture participants.
+  - [x] Fixture sync logs fetched fixtures, teams extracted, and teams upserted.
+  - [x] Missing names still fall back to team IDs.
+- Failure recovery: none.
+- Next: TASK-002.
+## Fixture Team Name Resolution - TASK-002 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Files changed: `server/services/dataService.js`, `server/tests/api.test.js`, `_workflow/runs/dev/tasks.md`
+- Iteration 1 Build:
+  - Goal: prove fixture API returns populated team objects from cached Team records.
+  - Red: `npm test` failed because connected `/api/v1/fixtures?limit=4` returned `homeTeam: undefined`.
+  - Green: added batched Team lookup and serialized `homeTeam` / `awayTeam` objects; `npm test` passed with 41 backend tests.
+  - Refactor: scoped detail enrichment to connected database records so disconnected mock fallback does not query Mongoose.
+  - Verification: `npm test` passed.
+  - Review: list enrichment loads all needed Team records in one query.
+- Iteration 2 Refine:
+  - Goal: prove match detail fallback from persisted display fields.
+  - Red: no separate failing Red because Iteration 1 already implemented the shared serializer path; added focused regression coverage immediately after.
+  - Green: `npm test` passed with 42 backend tests.
+  - Refactor: no further refactor needed.
+  - Verification: `npm test` passed.
+  - Review: persisted names/logos cover missing Team records without fabricating data.
+- Iteration 3 Polish:
+  - Goal: syntax and serializer review.
+  - Red: not applicable for syntax-only polish.
+  - Green: targeted syntax checks passed.
+  - Refactor: no further refactor required.
+  - Verification: `node --check server/services/dataService.js` and `node --check server/tests/api.test.js` passed.
+  - Review: provider/internal fields stay stripped from public and nested team output.
+- Acceptance:
+  - [x] `/api/v1/fixtures` returns `homeTeam.name` and `awayTeam.name` when known.
+  - [x] `/api/v1/matches` and match detail responses remain compatible and enriched.
+  - [x] Provider/internal fields remain private.
+  - [x] Fallback `team-${id}` appears only when names are unavailable.
+- Failure recovery: corrected a potential disconnected mock-detail query before Green verification.
+- Next: TASK-003.
+## Fixture Team Name Resolution - TASK-003 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Applied skill: design-taste-frontend
+- Files changed: `client/src/components/MatchList.jsx`, `client/src/App.test.jsx`, `_workflow/runs/dev/tasks.md`
+- Iteration 1 Build:
+  - Goal: prove fixture cards render real names and logos from populated API teams.
+  - Red: `npm test --prefix client` failed because expected logo images were absent from the `/fixtures` route.
+  - Green: added fixed-size decorative logo slots to `MatchList`; `npm test --prefix client` passed with 16 tests.
+  - Refactor: replaced the small component file cleanly after mojibake score separators prevented a targeted patch.
+  - Verification: `npm test --prefix client` passed.
+  - Review: no new dependencies; the UI keeps existing name precedence.
+- Iteration 2 Refine:
+  - Goal: prove persisted names render without broken logos.
+  - Red: no separate failing Red because Iteration 1 implementation already satisfied the fallback path; added regression coverage immediately after.
+  - Green: `npm test --prefix client` passed with 17 tests.
+  - Refactor: no further refactor required.
+  - Verification: `npm test --prefix client` passed.
+  - Review: missing logos do not create broken image elements.
+- Iteration 3 Polish:
+  - Goal: final UI quality and full verification.
+  - Red: not applicable for polish-only verification.
+  - Green: `npm run verify` passed; `git diff --check` passed with line-ending warnings only; local API smoke returned populated names/logos.
+  - Refactor: no further refactor required.
+  - Verification: `npm test --prefix client`, `npm run lint --prefix client`, `npm run build --prefix client`, `npm run verify`, `git diff --check`, and local API smoke passed.
+  - Review: Browser connector was unavailable through tool discovery, so automated route tests/lint/build and API smoke were used as fallback visual confidence.
+- Acceptance:
+  - [x] Upcoming fixture cards display real names.
+  - [x] Fixture cards show logos when available.
+  - [x] No card shows `team-XXXX` when a name exists.
+  - [x] UI remains responsive and accessible.
+- Failure recovery: targeted patch failed due mojibake separators; replaced the small component file cleanly and verified.
+- Next: final review, Fallow Quality, release notes, summary, and health check.

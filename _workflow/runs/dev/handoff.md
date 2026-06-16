@@ -1,92 +1,74 @@
-# Workflow Handoff
+# Handoff: Fixture Team Name Resolution
 
-## Shared Understanding Handoff
+Date: 2026-06-16
+Run: `dev`
+Status: Complete
 
-### Original Request
+## Request
 
-Fix CupPulse Sportmonks fixture sync. Sportmonks succeeds with `GET /fixtures?filter=fixtureSeasons:27897&api_token=...`, but CupPulse cached fixtures were empty because worker sync was not writing records.
+Fix CupPulse fixture team-name resolution so Sportmonks fixtures display real home and away club names and logos instead of fallback IDs such as `team-2447`.
 
-### Confirmed Understanding
+## Completed Work
 
-Fixture sync needed to use singular `filter`, not plural `filters`. Live verification also showed worker persistence could be blocked by missing required `id` values on `syncstates` and `joblocks`, so those in-scope sync-path blockers were fixed.
+- Inspected the Sportmonks fixture ingestion path, fixture/match/team models, sync service, normalizers, API serializer, and fixture card rendering.
+- Confirmed fixture sync already requests `include=participants`.
+- Updated fixture normalization to extract participant home/away IDs, names, and logos.
+- Persisted optional fixture/match display fields for team names and logos.
+- Upserted extracted teams during fixture sync.
+- Added sync logging for fixtures fetched, teams extracted, and teams upserted.
+- Enriched fixture and match API responses with `homeTeam` and `awayTeam`.
+- Preserved fallback behavior when team names are unavailable.
+- Rendered team logos in fixture cards when the API provides them.
+- Added backend and frontend tests for the new behavior.
 
-### Decisions Made
+## Source Files Changed
 
-- Backend-only fix; no frontend source changes.
-- Preserve existing worker, lock, sync, normalizer, and API architecture.
-- Do not edit `.env`, commit credentials, or log `api_token`.
-- Add token-safe logs and tests.
+- `server/providers/sportmonks/normalizers.js`
+- `server/sync/syncService.js`
+- `server/models/index.js`
+- `server/services/dataService.js`
+- `server/tests/worker.test.js`
+- `server/tests/api.test.js`
+- `client/src/components/MatchList.jsx`
+- `client/src/App.test.jsx`
 
-### Assumptions
+## Workflow Artifacts
 
-- `SPORTMONKS_SEASON_ID=27897` is the intended live season ID.
-- Existing Sportmonks `/fixtures` endpoint and includes are valid.
+- `_workflow/runs/dev/request.md`
+- `_workflow/runs/dev/spec.md`
+- `_workflow/runs/dev/tasks.md`
+- `_workflow/runs/dev/progress.md`
+- `_workflow/runs/dev/review.md`
+- `_workflow/runs/dev/verification.md`
+- `_workflow/runs/dev/release-notes.md`
+- `_workflow/runs/dev/summary.md`
+- `_workflow/runs/dev/health.md`
+- `.workflow/fallow-audit.md`
 
-### In Scope
+## Verification Status
 
-- Sportmonks fixture query parameter fix.
-- Token-safe diagnostics.
-- Lock/sync-state persistence blocker discovered during live verification.
-- Tests and smoke verification.
+- `npm test`: passed, 42 backend tests.
+- `npm test --prefix client`: passed, 17 frontend tests.
+- `npm run lint --prefix client`: passed.
+- `npm run build --prefix client`: passed.
+- `npm run verify`: passed.
+- `git diff --check`: passed with line-ending warnings only.
+- Fallow new-code gate: passed.
+- API smoke for `GET /api/v1/fixtures?limit=4`: passed with real team names and logos.
 
-### Out Of Scope
+## Acceptance Status
 
-- Frontend redesign.
-- API contract changes.
-- Database schema migrations.
-- Deployment or commits.
+- [x] Upcoming fixtures show real club names.
+- [x] No fixture card displays `team-XXXX` when Sportmonks participant names are available.
+- [x] Team logos appear when available.
+- [x] Fixture API returns populated team information.
+- [x] Fallback behavior remains available for missing team names.
+- [x] Fixture sync logs fixture and team counts.
 
-### Acceptance Criteria
+## Remaining Issues
 
-- [x] Worker fetches fixtures using `filter=fixtureSeasons:27897`.
-- [x] Worker does not emit `filters`.
-- [x] MongoDB `fixtures` and `matches` collections are populated.
-- [x] `curl http://localhost:5000/api/v1/fixtures?limit=4` returns non-empty `data`.
-- [x] Frontend homepage path remains supported by populated API data and passing frontend tests.
-- [x] Logs include requested token-safe details.
-- [x] `npm test` passes.
+None blocking. Existing records may need the next fixture sync to persist the new display fields, but API enrichment can use cached Team records where available.
 
-### Risks And Edge Cases
+## Suggested Commit
 
-- Foreground worker command is long-running and may hit agent timeout; redirected logs confirmed successful worker behavior.
-- Inherited Sportmonks client request complexity remains outside this request.
-
-### Remaining Open Questions
-
-- None blocking.
-
-### Normalized Workflow Request
-
-Complete.
-
-## Live Resume State
-
-- Current phase: Complete
-- Current branch: `dev`
-- Current worktree: `C:\Users\laura.bolas\projects\cup-pulse\dev`
-- Run id: `dev`
-- Artifact root: `_workflow/runs/dev/`
-- Spec approval: Approved by user on 2026-06-16
-- Last completed task: TASK-003
-- Current task: None
-- Next task: None
-- Blockers: None
-- Dirty worktree at intake: clean
-- Verification status: Passed
-- Acceptance status: Complete
-- Workflow health: Passed
-- Fallow verdict: PASSED
-- Summary file: `_workflow/runs/dev/summary.md`
-- Suggested next prompt: commit and deploy the worker fix
-
-## Token / Resume State
-
-- Current phase: Complete
-- Current task: None
-- Current iteration: Not applicable
-- Last completed safe checkpoint: workflow complete
-- Files already changed: `server/providers/sportmonks/client.js`, `server/sync/lockService.js`, `server/sync/syncService.js`, `server/tests/worker.test.js`, workflow artifacts
-- Files planned next: none
-- Tests already run: `npm test`; `npm test --prefix client`; syntax checks; worker/API smoke; Fallow; final diff audit
-- Exact next action: commit/deploy if desired
-- Safe to continue automatically: no remaining approved tasks
+`fix: resolve fixture team names from Sportmonks participants`

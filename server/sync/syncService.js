@@ -41,6 +41,17 @@ function syncStateUpdate(job, fields) {
   };
 }
 
+function uniqueTeams(normalized) {
+  return [
+    ...new Map(
+      normalized
+        .flatMap((item) => item.teams || [])
+        .filter((team) => team?.id && team?.name)
+        .map((team) => [team.id, team]),
+    ).values(),
+  ];
+}
+
 function fixtureInclude(detailed) {
   if (detailed) {
     return "participants;venue;state;stage;group;scores;events;statistics;lineups;sidelined;xGFixture";
@@ -143,6 +154,19 @@ function createSyncService({
     });
   }
 
+  async function upsertFixtureTeams(job, normalized) {
+    const teams = uniqueTeams(normalized);
+    log.info("Fixture sync extracted teams", {
+      job,
+      teams: teams.length,
+    });
+    const teamsUpserted = await upsertMany(Team, teams);
+    log.info("Fixture sync upserted teams", {
+      job,
+      teams: teamsUpserted,
+    });
+  }
+
   async function syncStatic() {
     return track("static", async () => {
       const league = await client.fetchOne(
@@ -208,6 +232,7 @@ function createSyncService({
       const normalized = fixtures.map((fixture) =>
         normalizeFixture(fixture, competitionId),
       );
+      await upsertFixtureTeams(job, normalized);
       await upsertFixturesAndMatches(job, normalized);
       await refreshDerived(normalized.map((item) => item.match.id));
     });

@@ -116,3 +116,45 @@ Append a checkpoint at intake completion, spec save, task-plan save, each comple
 - Artifacts changed: `_workflow/runs/dev/verification.md`, `_workflow/runs/dev/review.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
 - Open questions: none blocking.
 - Next action: commit and deploy the worker fix.
+## 2026-06-16T05:57:51+01:00 - Spec Saved
+
+- Stage: spec approval gate
+- Memory summary: captured the fixture team-name bug, confirmed participant IDs are stored but names/logos are discarded or not serialized, and recorded the small frontend fixture-card logo scope.
+- Artifacts changed: `_workflow/runs/dev/request.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/spec.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none blocking
+- Next action: wait for explicit spec approval before generating `_workflow/runs/dev/tasks.md`
+## 2026-06-16T06:08:00+01:00 - Task Plan Saved
+
+- Stage: planning complete
+- Memory summary: user approved the fixture team-name resolution spec; planned three vertical tasks for ingestion, API enrichment, and fixture-card rendering.
+- Artifacts changed: `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none blocking
+- Next action: start TASK-001 Iteration 1 Red
+## 2026-06-16T06:18:00+01:00 - TASK-001 Done
+
+- Stage: TASK-002 Ready
+- Memory summary: fixture sync now extracts participant team names/logos, persists optional fixture/match display fields, upserts Teams from participants, and logs extracted/upserted team counts.
+- Artifacts changed: `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none blocking
+- Next action: start TASK-002 Iteration 1 Red
+## 2026-06-16T06:28:00+01:00 - TASK-002 Done
+
+- Stage: TASK-003 Ready
+- Memory summary: fixture and match API responses now expose sanitized `homeTeam` and `awayTeam` objects from cached Team records or persisted fixture display fields.
+- Artifacts changed: `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none blocking
+- Next action: start TASK-003 Iteration 1 Red
+## 2026-06-16T06:38:00+01:00 - TASK-003 Done
+
+- Stage: final review
+- Memory summary: fixture cards now render populated team names and logo images when available, with persisted-name fallback and no broken images when logos are absent.
+- Artifacts changed: `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none blocking
+- Next action: final diff audit and review
+## 2026-06-16T06:33:30+01:00 - Workflow Complete
+
+- Stage: complete
+- Memory summary: Fixture team-name resolution completed; source, tests, API smoke, Fallow, review, release notes, summary, and health check are complete.
+- Artifacts changed: `_workflow/runs/dev/review.md`, `_workflow/runs/dev/verification.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`, `_workflow/project-brain/project.json`, `_workflow/project-brain/PROJECT_BRAIN.md`
+- Open questions: none blocking
+- Next action: commit and deploy the fix

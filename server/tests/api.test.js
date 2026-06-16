@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const request = require("supertest");
 
 const { createApp } = require("../app");
+const { models } = require("../models");
 
 function createTestApp() {
   return createApp({
@@ -12,6 +13,40 @@ function createTestApp() {
     },
     readiness: () => ({ database: "disconnected" }),
   });
+}
+
+function createConnectedTestApp() {
+  return createApp({
+    config: {
+      clientUrl: "http://localhost:5173",
+      allowMockData: false,
+    },
+    readiness: () => ({ database: "connected" }),
+  });
+}
+
+function createListModel(records) {
+  return {
+    find() {
+      return {
+        sort() {
+          return this;
+        },
+        skip() {
+          return this;
+        },
+        limit() {
+          return this;
+        },
+        async lean() {
+          return records;
+        },
+      };
+    },
+    async countDocuments() {
+      return records.length;
+    },
+  };
 }
 
 const collectionRoutes = [
@@ -136,4 +171,125 @@ test("prediction and summary routes expose unavailable states consistently", asy
     summary.body.data.message,
     "Match summary will be available after full time.",
   );
+});
+
+test("fixture API populates home and away team names from cached teams", async () => {
+  const originalFixtures = models.fixtures;
+  const originalTeams = models.teams;
+  models.fixtures = createListModel([
+    {
+      id: "fixture-200",
+      competitionId: "fifa-world-cup-2026",
+      status: "scheduled",
+      startsAt: new Date("2026-06-20T19:00:00.000Z"),
+      homeTeamId: "team-2447",
+      awayTeamId: "team-1789",
+      syncedAt: new Date("2026-06-01T00:00:00.000Z"),
+      providerId: 200,
+    },
+  ]);
+  models.teams = {
+    find(filter) {
+      assert.deepEqual(filter.id.$in.sort(), ["team-1789", "team-2447"]);
+      return {
+        async lean() {
+          return [
+            {
+              id: "team-2447",
+              name: "FC Copenhagen",
+              crestUrl: "https://cdn.example/fck.png",
+              providerId: 2447,
+            },
+            {
+              id: "team-1789",
+              name: "Brondby",
+              crestUrl: "https://cdn.example/brondby.png",
+              providerId: 1789,
+            },
+          ];
+        },
+      };
+    },
+  };
+
+  try {
+    const app = createConnectedTestApp();
+    const response = await request(app)
+      .get("/api/v1/fixtures?limit=4")
+      .expect(200);
+
+    assert.deepEqual(response.body.data[0].homeTeam, {
+      id: "team-2447",
+      name: "FC Copenhagen",
+      logo: "https://cdn.example/fck.png",
+    });
+    assert.deepEqual(response.body.data[0].awayTeam, {
+      id: "team-1789",
+      name: "Brondby",
+      logo: "https://cdn.example/brondby.png",
+    });
+    assert.equal("providerId" in response.body.data[0].homeTeam, false);
+  } finally {
+    models.fixtures = originalFixtures;
+    models.teams = originalTeams;
+  }
+});
+
+test("match detail API falls back to persisted team display fields", async () => {
+  const originalMatches = models.matches;
+  const originalTeams = models.teams;
+  models.matches = {
+    findOne(filter) {
+      assert.deepEqual(filter, { id: "fixture-201" });
+      return {
+        async lean() {
+          return {
+            id: "fixture-201",
+            fixtureId: "fixture-201",
+            competitionId: "fifa-world-cup-2026",
+            status: "scheduled",
+            homeTeamId: "team-2905",
+            awayTeamId: "team-1789",
+            homeTeamName: "Seattle Sounders",
+            awayTeamName: "Brondby",
+            homeTeamLogo: "https://cdn.example/seattle.png",
+            awayTeamLogo: "https://cdn.example/brondby.png",
+            providerId: 201,
+            syncedAt: new Date("2026-06-01T00:00:00.000Z"),
+          };
+        },
+      };
+    },
+  };
+  models.teams = {
+    find() {
+      return {
+        async lean() {
+          return [];
+        },
+      };
+    },
+  };
+
+  try {
+    const app = createConnectedTestApp();
+    const response = await request(app)
+      .get("/api/v1/matches/fixture-201")
+      .expect(200);
+
+    assert.deepEqual(response.body.data.homeTeam, {
+      id: "team-2905",
+      name: "Seattle Sounders",
+      logo: "https://cdn.example/seattle.png",
+    });
+    assert.deepEqual(response.body.data.awayTeam, {
+      id: "team-1789",
+      name: "Brondby",
+      logo: "https://cdn.example/brondby.png",
+    });
+    assert.equal("providerId" in response.body.data, false);
+  } finally {
+    models.matches = originalMatches;
+    models.teams = originalTeams;
+  }
 });

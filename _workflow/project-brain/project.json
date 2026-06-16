@@ -1,227 +1,436 @@
-{
-  "version": "1.0.0",
-  "updatedAt": "2026-06-14T05:27:03+01:00",
-  "workflow": {
-    "currentStage": "complete",
-    "completedStages": [
-      "intake",
-      "spec",
-      "planning",
-      "implementation",
-      "verification",
-      "review",
-      "fallow-quality",
-      "release-notes",
-      "summary"
-    ],
-    "nextStage": "deployment-smoke",
-    "status": "complete"
-  },
-  "goals": [
-    {
-      "id": "goal-project-001",
-      "text": "Build CupPulse as a public 2026 FIFA Men's World Cup companion powered by Sportmonks and MongoDB Atlas.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/request.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "requirements": [
-    {
-      "id": "req-project-001",
-      "text": "The production MVP uses real Sportmonks World Cup data cached in normalized MongoDB collections and exposes it through CupPulse /api/v1 endpoints.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "constraints": [
-    {
-      "id": "constraint-project-001",
-      "text": "Mock data is only a development or explicitly enabled outage fallback; paid AI/prediction APIs and user account features are excluded.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "architectureDecisions": [
-    {
-      "id": "arch-project-001",
-      "text": "Deploy separate Heroku web and worker processes; only the worker performs Sportmonks synchronization and MongoDB locks guard refresh jobs.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/handoff.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "technicalDecisions": [
-    {
-      "id": "tech-project-001",
-      "text": "Use deterministic team/player-form predictions and template-based structured match summaries with source fingerprints.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "domainKnowledge": [
-    {
-      "id": "domain-project-001",
-      "text": "CupPulse targets the 2026 FIFA Men's World Cup finals and must represent provider-unavailable data explicitly rather than inventing it.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "openQuestions": [],
-  "risks": [
-    {
-      "id": "risk-project-001",
-      "text": "Sportmonks subscription coverage and pre-tournament field availability may require nullable fields and adaptive includes.",
-      "status": "active",
-      "confidence": 0.9,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "artifacts": [
-    {
-      "id": "artifact-project-001",
-      "text": "Active production MVP specification: _workflow/runs/dev/spec.md",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    },
-    {
-      "id": "artifact-project-002",
-      "text": "Completed production MVP workflow summary: _workflow/runs/dev/summary.md",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/summary.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T05:27:03+01:00",
-      "updatedAt": "2026-06-14T05:27:03+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "workflowHistory": [
-    {
-      "id": "workflow-project-001",
-      "text": "The dev run completed intake and saved its spec; planning is blocked on explicit approval.",
-      "status": "superseded",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/handoff.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": [
-        {
-          "timestamp": "2026-06-14T05:27:03+01:00",
-          "status": "superseded",
-          "reason": "The approved workflow completed."
-        }
-      ]
-    },
-    {
-      "id": "workflow-project-002",
-      "text": "The dev run completed all seven tasks with passing tests, lint, and build; credentialed deployment smoke remains external.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/summary.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T05:27:03+01:00",
-      "updatedAt": "2026-06-14T05:27:03+01:00",
-      "supersedes": [
-        "workflow-project-001"
-      ],
-      "history": []
-    }
-  ],
-  "custom": {},
-  "changeLog": [
-    {
-      "timestamp": "2026-06-14T04:24:48+01:00",
-      "runId": "dev",
-      "event": "spec-saved",
-      "summary": "Initialized durable CupPulse product memory and recorded the production MVP specification."
-    },
-    {
-      "timestamp": "2026-06-14T05:27:03+01:00",
-      "runId": "dev",
-      "event": "workflow-complete",
-      "summary": "Completed the public real-data MVP foundation and all required quality artifacts."
-    }
-  ]
+﻿{
+    "version":  "1.0.0",
+    "updatedAt":  "2026-06-16T06:33:30+01:00",
+    "workflow":  {
+                     "currentStage":  "complete",
+                     "completedStages":  [
+                                             "intake",
+                                             "spec",
+                                             "planning",
+                                             "TASK-001",
+                                             "TASK-002",
+                                             "TASK-003",
+                                             "review",
+                                             "fallow-quality",
+                                             "release-notes",
+                                             "summary",
+                                             "health-check"
+                                         ],
+                     "nextStage":  "none",
+                     "status":  "complete"
+                 },
+    "goals":  [
+                  {
+                      "id":  "goal-project-001",
+                      "text":  "Build CupPulse as a public 2026 FIFA Men\u0027s World Cup companion powered by Sportmonks and MongoDB Atlas.",
+                      "status":  "active",
+                      "confidence":  1,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/request.md",
+                                     "conversation":  "user"
+                                 },
+                      "createdAt":  "2026-06-14T04:24:48+01:00",
+                      "updatedAt":  "2026-06-14T04:24:48+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  }
+              ],
+    "requirements":  [
+                         {
+                             "id":  "req-project-001",
+                             "text":  "The production MVP uses real Sportmonks World Cup data cached in normalized MongoDB collections and exposes it through CupPulse /api/v1 endpoints.",
+                             "status":  "active",
+                             "confidence":  1,
+                             "source":  {
+                                            "runId":  "dev",
+                                            "artifact":  "_workflow/runs/dev/spec.md",
+                                            "conversation":  "user"
+                                        },
+                             "createdAt":  "2026-06-14T04:24:48+01:00",
+                             "updatedAt":  "2026-06-14T04:24:48+01:00",
+                             "supersedes":  [
+
+                                            ],
+                             "history":  [
+
+                                         ]
+                         },
+                         {
+                             "id":  "req-project-fixture-teams-001",
+                             "text":  "CupPulse fixture API responses and fixture cards must display real Sportmonks participant team names and logos when available, preserving team-ID fallback only for unavailable names.",
+                             "status":  "active",
+                             "confidence":  1,
+                             "source":  {
+                                            "runId":  "dev",
+                                            "artifact":  "_workflow/runs/dev/spec.md",
+                                            "conversation":  "workflow"
+                                        },
+                             "createdAt":  "2026-06-16T05:57:51+01:00",
+                             "updatedAt":  "2026-06-16T05:57:51+01:00",
+                             "supersedes":  [
+
+                                            ],
+                             "history":  [
+
+                                         ]
+                         }
+                     ],
+    "constraints":  [
+                        {
+                            "id":  "constraint-project-001",
+                            "text":  "Mock data is only a development or explicitly enabled outage fallback; paid AI/prediction APIs and user account features are excluded.",
+                            "status":  "active",
+                            "confidence":  1,
+                            "source":  {
+                                           "runId":  "dev",
+                                           "artifact":  "_workflow/runs/dev/spec.md",
+                                           "conversation":  "user"
+                                       },
+                            "createdAt":  "2026-06-14T04:24:48+01:00",
+                            "updatedAt":  "2026-06-14T04:24:48+01:00",
+                            "supersedes":  [
+
+                                           ],
+                            "history":  [
+
+                                        ]
+                        }
+                    ],
+    "architectureDecisions":  [
+                                  {
+                                      "id":  "arch-project-001",
+                                      "text":  "Deploy separate Heroku web and worker processes; only the worker performs Sportmonks synchronization and MongoDB locks guard refresh jobs.",
+                                      "status":  "active",
+                                      "confidence":  1,
+                                      "source":  {
+                                                     "runId":  "dev",
+                                                     "artifact":  "_workflow/runs/dev/handoff.md",
+                                                     "conversation":  "user"
+                                                 },
+                                      "createdAt":  "2026-06-14T04:24:48+01:00",
+                                      "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                      "supersedes":  [
+
+                                                     ],
+                                      "history":  [
+
+                                                  ]
+                                  }
+                              ],
+    "technicalDecisions":  [
+                               {
+                                   "id":  "tech-project-001",
+                                   "text":  "Use deterministic team/player-form predictions and template-based structured match summaries with source fingerprints.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/spec.md",
+                                                  "conversation":  "user"
+                                              },
+                                   "createdAt":  "2026-06-14T04:24:48+01:00",
+                                   "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               },
+                               {
+                                   "id":  "tech-project-fixture-team-extraction-001",
+                                   "text":  "Fixture sync extracts Sportmonks participant team names/logos, stores optional fixture/match display fields, and upserts Team records from named participants.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/progress.md",
+                                                  "conversation":  "workflow"
+                                              },
+                                   "createdAt":  "2026-06-16T06:18:00+01:00",
+                                   "updatedAt":  "2026-06-16T06:18:00+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               },
+                               {
+                                   "id":  "tech-project-fixture-api-enrichment-001",
+                                   "text":  "Fixture and match API responses enrich homeTeam and awayTeam from cached Team records or persisted fixture display fields while keeping provider fields private.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/progress.md",
+                                                  "conversation":  "workflow"
+                                              },
+                                   "createdAt":  "2026-06-16T06:28:00+01:00",
+                                   "updatedAt":  "2026-06-16T06:28:00+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               },
+                               {
+                                   "id":  "tech-project-fixture-card-logos-001",
+                                   "text":  "Shared match cards render API-provided team logos in fixed-size decorative slots and keep name fallback order as team object, persisted name, team ID, then to-be-confirmed.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/progress.md",
+                                                  "conversation":  "workflow"
+                                              },
+                                   "createdAt":  "2026-06-16T06:38:00+01:00",
+                                   "updatedAt":  "2026-06-16T06:38:00+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               }
+                           ],
+    "domainKnowledge":  [
+                            {
+                                "id":  "domain-project-001",
+                                "text":  "CupPulse targets the 2026 FIFA Men\u0027s World Cup finals and must represent provider-unavailable data explicitly rather than inventing it.",
+                                "status":  "active",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/spec.md",
+                                               "conversation":  "user"
+                                           },
+                                "createdAt":  "2026-06-14T04:24:48+01:00",
+                                "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+
+                                            ]
+                            }
+                        ],
+    "openQuestions":  [
+
+                      ],
+    "risks":  [
+                  {
+                      "id":  "risk-project-001",
+                      "text":  "Sportmonks subscription coverage and pre-tournament field availability may require nullable fields and adaptive includes.",
+                      "status":  "active",
+                      "confidence":  0.9,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/spec.md",
+                                     "conversation":  "workflow"
+                                 },
+                      "createdAt":  "2026-06-14T04:24:48+01:00",
+                      "updatedAt":  "2026-06-14T04:24:48+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "risk-project-fixture-teams-001",
+                      "text":  "Fixture participant team data from Sportmonks may be partial before tournament data is final, requiring nullable logos and explicit fallbacks.",
+                      "status":  "active",
+                      "confidence":  0.9,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/spec.md",
+                                     "conversation":  "workflow"
+                                 },
+                      "createdAt":  "2026-06-16T05:57:51+01:00",
+                      "updatedAt":  "2026-06-16T05:57:51+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  }
+              ],
+    "artifacts":  [
+                      {
+                          "id":  "artifact-project-001",
+                          "text":  "Active production MVP specification: _workflow/runs/dev/spec.md",
+                          "status":  "active",
+                          "confidence":  1,
+                          "source":  {
+                                         "runId":  "dev",
+                                         "artifact":  "_workflow/runs/dev/spec.md",
+                                         "conversation":  "workflow"
+                                     },
+                          "createdAt":  "2026-06-14T04:24:48+01:00",
+                          "updatedAt":  "2026-06-14T04:24:48+01:00",
+                          "supersedes":  [
+
+                                         ],
+                          "history":  [
+
+                                      ]
+                      },
+                      {
+                          "id":  "artifact-project-002",
+                          "text":  "Completed production MVP workflow summary: _workflow/runs/dev/summary.md",
+                          "status":  "active",
+                          "confidence":  1,
+                          "source":  {
+                                         "runId":  "dev",
+                                         "artifact":  "_workflow/runs/dev/summary.md",
+                                         "conversation":  "workflow"
+                                     },
+                          "createdAt":  "2026-06-14T05:27:03+01:00",
+                          "updatedAt":  "2026-06-14T05:27:03+01:00",
+                          "supersedes":  [
+
+                                         ],
+                          "history":  [
+
+                                      ]
+                      },
+                      {
+                          "id":  "artifact-project-fixture-teams-spec",
+                          "text":  "Fixture team-name resolution specification saved at _workflow/runs/dev/spec.md.",
+                          "status":  "active",
+                          "confidence":  1,
+                          "source":  {
+                                         "runId":  "dev",
+                                         "artifact":  "_workflow/runs/dev/spec.md",
+                                         "conversation":  "workflow"
+                                     },
+                          "createdAt":  "2026-06-16T05:57:51+01:00",
+                          "updatedAt":  "2026-06-16T05:57:51+01:00",
+                          "supersedes":  [
+
+                                         ],
+                          "history":  [
+
+                                      ]
+                      }
+                  ],
+    "workflowHistory":  [
+                            {
+                                "id":  "workflow-project-001",
+                                "text":  "The dev run completed intake and saved its spec; planning is blocked on explicit approval.",
+                                "status":  "superseded",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/handoff.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-14T04:24:48+01:00",
+                                "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+                                                {
+                                                    "timestamp":  "2026-06-14T05:27:03+01:00",
+                                                    "status":  "superseded",
+                                                    "reason":  "The approved workflow completed."
+                                                }
+                                            ]
+                            },
+                            {
+                                "id":  "workflow-project-002",
+                                "text":  "The dev run completed all seven tasks with passing tests, lint, and build; credentialed deployment smoke remains external.",
+                                "status":  "active",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/summary.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-14T05:27:03+01:00",
+                                "updatedAt":  "2026-06-14T05:27:03+01:00",
+                                "supersedes":  [
+                                                   "workflow-project-001"
+                                               ],
+                                "history":  [
+
+                                            ]
+                            },
+                            {
+                                "id":  "workflow-project-fixture-teams-001",
+                                "text":  "The dev run is waiting at the fixture team-name resolution spec approval gate.",
+                                "status":  "active",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/handoff.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-16T05:57:51+01:00",
+                                "updatedAt":  "2026-06-16T05:57:51+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+
+                                            ]
+                            }
+                        ],
+    "custom":  {
+
+               },
+    "changeLog":  [
+                      {
+                          "timestamp":  "2026-06-14T04:24:48+01:00",
+                          "runId":  "dev",
+                          "event":  "spec-saved",
+                          "summary":  "Initialized durable CupPulse product memory and recorded the production MVP specification."
+                      },
+                      {
+                          "timestamp":  "2026-06-14T05:27:03+01:00",
+                          "runId":  "dev",
+                          "event":  "workflow-complete",
+                          "summary":  "Completed the public real-data MVP foundation and all required quality artifacts."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T05:57:51+01:00",
+                          "runId":  "dev",
+                          "event":  "fixture-team-resolution-spec-saved",
+                          "summary":  "Captured the fixture team-name resolution scope and saved the approval-gated spec."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:08:00+01:00",
+                          "runId":  "dev",
+                          "event":  "fixture-team-resolution-plan-saved",
+                          "summary":  "User approved the spec and the vertical task plan was saved."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:18:00+01:00",
+                          "runId":  "dev",
+                          "event":  "fixture-team-resolution-task-001-complete",
+                          "summary":  "Completed fixture participant extraction, Team upsert, and sync logging."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:28:00+01:00",
+                          "runId":  "dev",
+                          "event":  "fixture-team-resolution-task-002-complete",
+                          "summary":  "Completed fixture/match API team enrichment."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:38:00+01:00",
+                          "runId":  "dev",
+                          "event":  "fixture-team-resolution-task-003-complete",
+                          "summary":  "Completed fixture-card team name and logo display."
+                      }
+                  ]
 }

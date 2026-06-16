@@ -1,32 +1,78 @@
-{
-  "version": "1.0.0",
-  "updatedAt": "2026-06-14T05:27:03+01:00",
-  "events": [
-    {
-      "id": "history-20260614-dev-001",
-      "timestamp": "2026-06-14T04:24:48+01:00",
-      "runId": "dev",
-      "event": "intake-and-spec-saved",
-      "summary": "Recorded real-data MVP scope, architecture, constraints, risks, and the pending spec approval gate.",
-      "artifacts": [
-        "_workflow/runs/dev/request.md",
-        "_workflow/runs/dev/handoff.md",
-        "_workflow/runs/dev/spec.md"
-      ]
-    },
-    {
-      "id": "history-20260614-dev-002",
-      "timestamp": "2026-06-14T05:27:03+01:00",
-      "runId": "dev",
-      "event": "workflow-complete",
-      "summary": "Completed all seven approved implementation tasks and final verification, review, Fallow, release, and summary gates.",
-      "artifacts": [
-        "_workflow/runs/dev/verification.md",
-        "_workflow/runs/dev/review.md",
-        ".workflow/fallow-audit.md",
-        "_workflow/runs/dev/release-notes.md",
-        "_workflow/runs/dev/summary.md"
-      ]
-    }
-  ]
+﻿{
+    "version":  "1.0.0",
+    "updatedAt":  "2026-06-16T06:38:00+01:00",
+    "events":  [
+                   {
+                       "id":  "history-20260614-dev-001",
+                       "timestamp":  "2026-06-14T04:24:48+01:00",
+                       "runId":  "dev",
+                       "event":  "intake-and-spec-saved",
+                       "summary":  "Recorded real-data MVP scope, architecture, constraints, risks, and the pending spec approval gate.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/request.md",
+                                         "_workflow/runs/dev/handoff.md",
+                                         "_workflow/runs/dev/spec.md"
+                                     ]
+                   },
+                   {
+                       "id":  "history-20260614-dev-002",
+                       "timestamp":  "2026-06-14T05:27:03+01:00",
+                       "runId":  "dev",
+                       "event":  "workflow-complete",
+                       "summary":  "Completed all seven approved implementation tasks and final verification, review, Fallow, release, and summary gates.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/verification.md",
+                                         "_workflow/runs/dev/review.md",
+                                         ".workflow/fallow-audit.md",
+                                         "_workflow/runs/dev/release-notes.md",
+                                         "_workflow/runs/dev/summary.md"
+                                     ]
+                   },
+                   {
+                       "timestamp":  "2026-06-16T05:57:51+01:00",
+                       "runId":  "dev",
+                       "event":  "fixture-team-resolution-spec-saved",
+                       "summary":  "Updated project and run memory for the fixture team-name resolution spec approval gate.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/spec.md",
+                                         "_workflow/runs/dev/handoff.md"
+                                     ]
+                   },
+                   {
+                       "timestamp":  "2026-06-16T06:08:00+01:00",
+                       "runId":  "dev",
+                       "event":  "fixture-team-resolution-plan-saved",
+                       "summary":  "Saved task plan with TASK-001 ingestion, TASK-002 API enrichment, and TASK-003 fixture-card display.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/tasks.md"
+                                     ]
+                   },
+                   {
+                       "timestamp":  "2026-06-16T06:18:00+01:00",
+                       "runId":  "dev",
+                       "event":  "fixture-team-resolution-task-001-complete",
+                       "summary":  "Completed TASK-001 and advanced to API enrichment.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/progress.md"
+                                     ]
+                   },
+                   {
+                       "timestamp":  "2026-06-16T06:28:00+01:00",
+                       "runId":  "dev",
+                       "event":  "fixture-team-resolution-task-002-complete",
+                       "summary":  "Completed TASK-002 and advanced to frontend card display.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/progress.md"
+                                     ]
+                   },
+                   {
+                       "timestamp":  "2026-06-16T06:38:00+01:00",
+                       "runId":  "dev",
+                       "event":  "fixture-team-resolution-task-003-complete",
+                       "summary":  "Completed all implementation tasks and advanced to final review.",
+                       "artifacts":  [
+                                         "_workflow/runs/dev/progress.md"
+                                     ]
+                   }
+               ]
 }

@@ -10,6 +10,33 @@ function teamName(match, side) {
   );
 }
 
+function teamLogo(match, side) {
+  return match[`${side}Team`]?.logo || match[`${side}TeamLogo`] || null;
+}
+
+function TeamLine({ match, side }) {
+  const logo = teamLogo(match, side);
+  return (
+    <div className="flex min-w-0 items-center gap-3 text-base font-bold">
+      <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
+        {logo && (
+          <img
+            src={logo}
+            alt=""
+            className="size-5 object-contain"
+            loading="lazy"
+            aria-hidden="true"
+          />
+        )}
+      </span>
+      <span className="min-w-0 flex-1 truncate">{teamName(match, side)}</span>
+      <span className="font-mono text-lime-300">
+        {match.score?.[side] ?? "-"}
+      </span>
+    </div>
+  );
+}
+
 export function MatchList({ matches = [] }) {
   return (
     <div className="divide-y divide-white/10 border-y border-white/10">
@@ -23,17 +50,9 @@ export function MatchList({ matches = [] }) {
             {match.status || "Scheduled"}
           </div>
           <div>
-            <div className="flex items-center gap-3 text-base font-bold">
-              <span className="min-w-0 flex-1 truncate">{teamName(match, "home")}</span>
-              <span className="font-mono text-lime-300">
-                {match.score?.home ?? "–"}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center gap-3 text-base font-bold">
-              <span className="min-w-0 flex-1 truncate">{teamName(match, "away")}</span>
-              <span className="font-mono text-lime-300">
-                {match.score?.away ?? "–"}
-              </span>
+            <TeamLine match={match} side="home" />
+            <div className="mt-2">
+              <TeamLine match={match} side="away" />
             </div>
             <p className="mt-3 text-xs text-stone-500 sm:hidden">
               {match.status || "Scheduled"}

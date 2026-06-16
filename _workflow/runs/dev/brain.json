@@ -1,281 +1,482 @@
-{
-  "version": "1.0.0",
-  "updatedAt": "2026-06-14T17:50:11+01:00",
-  "runId": "dev",
-  "workflow": {
-    "currentStage": "complete",
-    "completedStages": [
-      "intake",
-      "spec",
-      "planning",
-      "TASK-001",
-      "TASK-002",
-      "TASK-003",
-      "TASK-004",
-      "TASK-005",
-      "TASK-006",
-      "TASK-007",
-      "verification",
-      "review",
-      "fallow-quality",
-      "release-notes",
-      "summary"
-    ],
-    "nextStage": "deployment-smoke",
-    "status": "complete"
-  },
-  "goals": [
-    {
-      "id": "goal-dev-001",
-      "text": "Deliver a production-shaped public 2026 FIFA Men's World Cup companion backed by real Sportmonks data and MongoDB caching.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/request.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "requirements": [
-    {
-      "id": "req-dev-001",
-      "text": "Implement all listed public pages and normalized read-only REST endpoints under /api/v1.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    },
-    {
-      "id": "req-dev-002",
-      "text": "Ingest Sportmonks data in a separate Heroku worker, persist normalized records in MongoDB Atlas, and serve cached data during provider downtime.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "constraints": [
-    {
-      "id": "constraint-dev-001",
-      "text": "Do not use paid AI or prediction APIs; do not expose credentials or raw Sportmonks response shapes.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    },
-    {
-      "id": "constraint-dev-002",
-      "text": "Socket.IO, admin UI, authentication, accounts, profiles, OAuth, and personalization are out of scope.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "architectureDecisions": [
-    {
-      "id": "arch-dev-001",
-      "text": "Use separate Heroku web and worker processes; only the worker writes provider-derived normalized data and MongoDB locks prevent duplicate refreshes.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/handoff.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "technicalDecisions": [
-    {
-      "id": "tech-dev-001",
-      "text": "Predictions combine team recent form 35%, player form aggregate 30%, scoring trend 20%, head-to-head 10%, and venue factor 5%.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "domainKnowledge": [
-    {
-      "id": "domain-dev-001",
-      "text": "The target competition is the 2026 FIFA Men's World Cup finals and unavailable pre-tournament fields must remain explicit rather than fabricated.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "user"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "openQuestions": [],
-  "risks": [
-    {
-      "id": "risk-dev-001",
-      "text": "Sportmonks subscription coverage, rate limits, and availability of 2026 advanced statistics may constrain exact ingestion fields.",
-      "status": "active",
-      "confidence": 0.9,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "artifacts": [
-    {
-      "id": "artifact-dev-spec",
-      "text": "Detailed implementation specification saved at _workflow/runs/dev/spec.md.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/spec.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "workflowHistory": [
-    {
-      "id": "workflow-dev-001",
-      "text": "Intake completed and detailed spec saved; waiting for explicit approval before planning.",
-      "status": "superseded",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/handoff.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T04:24:48+01:00",
-      "updatedAt": "2026-06-14T04:24:48+01:00",
-      "supersedes": [],
-      "history": [
-        {
-          "timestamp": "2026-06-14T15:48:40+01:00",
-          "status": "superseded",
-          "reason": "Continuation reconciliation confirmed the approved workflow is complete."
-        }
-      ]
-    },
-    {
-      "id": "workflow-dev-002",
-      "text": "Tasks 001 through 006 are complete; deployment resilience and final quality gates remain.",
-      "status": "superseded",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/handoff.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T05:15:32+01:00",
-      "updatedAt": "2026-06-14T05:15:32+01:00",
-      "supersedes": [],
-      "history": [
-        {
-          "timestamp": "2026-06-14T15:48:40+01:00",
-          "status": "superseded",
-          "reason": "TASK-007 and all final quality gates completed."
-        }
-      ]
-    },
-    {
-      "id": "workflow-dev-003",
-      "text": "All seven approved tasks completed with passing tests, lint, and build; external credentialed deployment smoke remains.",
-      "status": "active",
-      "confidence": 1,
-      "source": {
-        "runId": "dev",
-        "artifact": "_workflow/runs/dev/summary.md",
-        "conversation": "workflow"
-      },
-      "createdAt": "2026-06-14T05:27:03+01:00",
-      "updatedAt": "2026-06-14T05:27:03+01:00",
-      "supersedes": [],
-      "history": []
-    }
-  ],
-  "custom": {},
-  "changeLog": [
-    {
-      "timestamp": "2026-06-14T04:24:48+01:00",
-      "event": "intake-and-spec-saved",
-      "summary": "Captured the production MVP scope and moved the run to the spec approval gate."
-    },
-    {
-      "timestamp": "2026-06-14T05:15:32+01:00",
-      "event": "task-006-complete",
-      "summary": "Completed all public frontend routes and advanced to deployment resilience."
-    },
-    {
-      "timestamp": "2026-06-14T05:27:03+01:00",
-      "event": "workflow-complete",
-      "summary": "Completed all approved MVP tasks and final quality gates."
-    },
-    {
-      "timestamp": "2026-06-14T15:48:40+01:00",
-      "event": "continuation-reconciled",
-      "summary": "Confirmed the workflow is complete, superseded stale run-history states, and recorded that credentialed deployment smoke cannot run without external configuration."
-    },
-    {
-      "timestamp": "2026-06-14T17:50:11+01:00",
-      "event": "credential-free-deployment-smoke",
-      "summary": "Verified production and worker fail-closed behavior, local HTTP fallback behavior, full tests/lint/build, and Heroku authentication without creating or linking a deployment target."
-    }
-  ]
+﻿{
+    "version":  "1.0.0",
+    "updatedAt":  "2026-06-16T06:33:30+01:00",
+    "runId":  "dev",
+    "workflow":  {
+                     "currentStage":  "complete",
+                     "completedStages":  [
+                                             "intake",
+                                             "spec",
+                                             "planning",
+                                             "TASK-001",
+                                             "TASK-002",
+                                             "TASK-003"
+                                         ],
+                     "nextStage":  "none",
+                     "status":  "complete"
+                 },
+    "goals":  [
+                  {
+                      "id":  "goal-dev-001",
+                      "text":  "Deliver a production-shaped public 2026 FIFA Men\u0027s World Cup companion backed by real Sportmonks data and MongoDB caching.",
+                      "status":  "active",
+                      "confidence":  1,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/request.md",
+                                     "conversation":  "user"
+                                 },
+                      "createdAt":  "2026-06-14T04:24:48+01:00",
+                      "updatedAt":  "2026-06-14T04:24:48+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "goal-dev-fixture-teams-001",
+                      "text":  "Display real Sportmonks home and away team names and logos for CupPulse fixtures instead of fallback team IDs.",
+                      "status":  "active",
+                      "confidence":  1,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/request.md",
+                                     "conversation":  "user"
+                                 },
+                      "createdAt":  "2026-06-16T05:57:51+01:00",
+                      "updatedAt":  "2026-06-16T05:57:51+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  }
+              ],
+    "requirements":  [
+                         {
+                             "id":  "req-dev-001",
+                             "text":  "Implement all listed public pages and normalized read-only REST endpoints under /api/v1.",
+                             "status":  "active",
+                             "confidence":  1,
+                             "source":  {
+                                            "runId":  "dev",
+                                            "artifact":  "_workflow/runs/dev/spec.md",
+                                            "conversation":  "user"
+                                        },
+                             "createdAt":  "2026-06-14T04:24:48+01:00",
+                             "updatedAt":  "2026-06-14T04:24:48+01:00",
+                             "supersedes":  [
+
+                                            ],
+                             "history":  [
+
+                                         ]
+                         },
+                         {
+                             "id":  "req-dev-002",
+                             "text":  "Ingest Sportmonks data in a separate Heroku worker, persist normalized records in MongoDB Atlas, and serve cached data during provider downtime.",
+                             "status":  "active",
+                             "confidence":  1,
+                             "source":  {
+                                            "runId":  "dev",
+                                            "artifact":  "_workflow/runs/dev/spec.md",
+                                            "conversation":  "user"
+                                        },
+                             "createdAt":  "2026-06-14T04:24:48+01:00",
+                             "updatedAt":  "2026-06-14T04:24:48+01:00",
+                             "supersedes":  [
+
+                                            ],
+                             "history":  [
+
+                                         ]
+                         },
+                         {
+                             "id":  "req-dev-fixture-teams-001",
+                             "text":  "Fixture sync must extract participant teams, upsert Team records, and expose populated homeTeam and awayTeam information through /api/v1 fixture responses.",
+                             "status":  "active",
+                             "confidence":  1,
+                             "source":  {
+                                            "runId":  "dev",
+                                            "artifact":  "_workflow/runs/dev/spec.md",
+                                            "conversation":  "workflow"
+                                        },
+                             "createdAt":  "2026-06-16T05:57:51+01:00",
+                             "updatedAt":  "2026-06-16T05:57:51+01:00",
+                             "supersedes":  [
+
+                                            ],
+                             "history":  [
+
+                                         ]
+                         }
+                     ],
+    "constraints":  [
+                        {
+                            "id":  "constraint-dev-001",
+                            "text":  "Do not use paid AI or prediction APIs; do not expose credentials or raw Sportmonks response shapes.",
+                            "status":  "active",
+                            "confidence":  1,
+                            "source":  {
+                                           "runId":  "dev",
+                                           "artifact":  "_workflow/runs/dev/spec.md",
+                                           "conversation":  "user"
+                                       },
+                            "createdAt":  "2026-06-14T04:24:48+01:00",
+                            "updatedAt":  "2026-06-14T04:24:48+01:00",
+                            "supersedes":  [
+
+                                           ],
+                            "history":  [
+
+                                        ]
+                        },
+                        {
+                            "id":  "constraint-dev-002",
+                            "text":  "Socket.IO, admin UI, authentication, accounts, profiles, OAuth, and personalization are out of scope.",
+                            "status":  "active",
+                            "confidence":  1,
+                            "source":  {
+                                           "runId":  "dev",
+                                           "artifact":  "_workflow/runs/dev/spec.md",
+                                           "conversation":  "user"
+                                       },
+                            "createdAt":  "2026-06-14T04:24:48+01:00",
+                            "updatedAt":  "2026-06-14T04:24:48+01:00",
+                            "supersedes":  [
+
+                                           ],
+                            "history":  [
+
+                                        ]
+                        }
+                    ],
+    "architectureDecisions":  [
+                                  {
+                                      "id":  "arch-dev-001",
+                                      "text":  "Use separate Heroku web and worker processes; only the worker writes provider-derived normalized data and MongoDB locks prevent duplicate refreshes.",
+                                      "status":  "active",
+                                      "confidence":  1,
+                                      "source":  {
+                                                     "runId":  "dev",
+                                                     "artifact":  "_workflow/runs/dev/handoff.md",
+                                                     "conversation":  "user"
+                                                 },
+                                      "createdAt":  "2026-06-14T04:24:48+01:00",
+                                      "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                      "supersedes":  [
+
+                                                     ],
+                                      "history":  [
+
+                                                  ]
+                                  }
+                              ],
+    "technicalDecisions":  [
+                               {
+                                   "id":  "tech-dev-001",
+                                   "text":  "Predictions combine team recent form 35%, player form aggregate 30%, scoring trend 20%, head-to-head 10%, and venue factor 5%.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/spec.md",
+                                                  "conversation":  "user"
+                                              },
+                                   "createdAt":  "2026-06-14T04:24:48+01:00",
+                                   "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               },
+                               {
+                                   "id":  "tech-dev-fixture-team-extraction-001",
+                                   "text":  "Fixture sync extracts Sportmonks participant team names/logos, stores optional fixture/match display fields, and upserts Team records from named participants.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/progress.md",
+                                                  "conversation":  "workflow"
+                                              },
+                                   "createdAt":  "2026-06-16T06:18:00+01:00",
+                                   "updatedAt":  "2026-06-16T06:18:00+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               },
+                               {
+                                   "id":  "tech-dev-fixture-api-enrichment-001",
+                                   "text":  "Fixture and match API responses enrich homeTeam and awayTeam from cached Team records or persisted fixture display fields while keeping provider fields private.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/progress.md",
+                                                  "conversation":  "workflow"
+                                              },
+                                   "createdAt":  "2026-06-16T06:28:00+01:00",
+                                   "updatedAt":  "2026-06-16T06:28:00+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               },
+                               {
+                                   "id":  "tech-dev-fixture-card-logos-001",
+                                   "text":  "Shared match cards render API-provided team logos in fixed-size decorative slots and keep name fallback order as team object, persisted name, team ID, then to-be-confirmed.",
+                                   "status":  "active",
+                                   "confidence":  1,
+                                   "source":  {
+                                                  "runId":  "dev",
+                                                  "artifact":  "_workflow/runs/dev/progress.md",
+                                                  "conversation":  "workflow"
+                                              },
+                                   "createdAt":  "2026-06-16T06:38:00+01:00",
+                                   "updatedAt":  "2026-06-16T06:38:00+01:00",
+                                   "supersedes":  [
+
+                                                  ],
+                                   "history":  [
+
+                                               ]
+                               }
+                           ],
+    "domainKnowledge":  [
+                            {
+                                "id":  "domain-dev-001",
+                                "text":  "The target competition is the 2026 FIFA Men\u0027s World Cup finals and unavailable pre-tournament fields must remain explicit rather than fabricated.",
+                                "status":  "active",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/spec.md",
+                                               "conversation":  "user"
+                                           },
+                                "createdAt":  "2026-06-14T04:24:48+01:00",
+                                "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+
+                                            ]
+                            }
+                        ],
+    "openQuestions":  [
+
+                      ],
+    "risks":  [
+                  {
+                      "id":  "risk-dev-001",
+                      "text":  "Sportmonks subscription coverage, rate limits, and availability of 2026 advanced statistics may constrain exact ingestion fields.",
+                      "status":  "active",
+                      "confidence":  0.9,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/spec.md",
+                                     "conversation":  "workflow"
+                                 },
+                      "createdAt":  "2026-06-14T04:24:48+01:00",
+                      "updatedAt":  "2026-06-14T04:24:48+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  },
+                  {
+                      "id":  "risk-dev-fixture-teams-001",
+                      "text":  "Sportmonks participants may omit names or logos for some fixtures, so fallback behavior must remain available without fabricating data.",
+                      "status":  "active",
+                      "confidence":  0.9,
+                      "source":  {
+                                     "runId":  "dev",
+                                     "artifact":  "_workflow/runs/dev/spec.md",
+                                     "conversation":  "workflow"
+                                 },
+                      "createdAt":  "2026-06-16T05:57:51+01:00",
+                      "updatedAt":  "2026-06-16T05:57:51+01:00",
+                      "supersedes":  [
+
+                                     ],
+                      "history":  [
+
+                                  ]
+                  }
+              ],
+    "artifacts":  [
+                      {
+                          "id":  "artifact-dev-spec",
+                          "text":  "Detailed implementation specification saved at _workflow/runs/dev/spec.md.",
+                          "status":  "active",
+                          "confidence":  1,
+                          "source":  {
+                                         "runId":  "dev",
+                                         "artifact":  "_workflow/runs/dev/spec.md",
+                                         "conversation":  "workflow"
+                                     },
+                          "createdAt":  "2026-06-14T04:24:48+01:00",
+                          "updatedAt":  "2026-06-14T04:24:48+01:00",
+                          "supersedes":  [
+
+                                         ],
+                          "history":  [
+
+                                      ]
+                      }
+                  ],
+    "workflowHistory":  [
+                            {
+                                "id":  "workflow-dev-001",
+                                "text":  "Intake completed and detailed spec saved; waiting for explicit approval before planning.",
+                                "status":  "superseded",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/handoff.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-14T04:24:48+01:00",
+                                "updatedAt":  "2026-06-14T04:24:48+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+                                                {
+                                                    "timestamp":  "2026-06-14T15:48:40+01:00",
+                                                    "status":  "superseded",
+                                                    "reason":  "Continuation reconciliation confirmed the approved workflow is complete."
+                                                }
+                                            ]
+                            },
+                            {
+                                "id":  "workflow-dev-002",
+                                "text":  "Tasks 001 through 006 are complete; deployment resilience and final quality gates remain.",
+                                "status":  "superseded",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/handoff.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-14T05:15:32+01:00",
+                                "updatedAt":  "2026-06-14T05:15:32+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+                                                {
+                                                    "timestamp":  "2026-06-14T15:48:40+01:00",
+                                                    "status":  "superseded",
+                                                    "reason":  "TASK-007 and all final quality gates completed."
+                                                }
+                                            ]
+                            },
+                            {
+                                "id":  "workflow-dev-003",
+                                "text":  "All seven approved tasks completed with passing tests, lint, and build; external credentialed deployment smoke remains.",
+                                "status":  "active",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/summary.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-14T05:27:03+01:00",
+                                "updatedAt":  "2026-06-14T05:27:03+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+
+                                            ]
+                            },
+                            {
+                                "id":  "workflow-dev-fixture-teams-001",
+                                "text":  "Fixture team-name resolution intake and spec are complete; planning is blocked on explicit spec approval.",
+                                "status":  "active",
+                                "confidence":  1,
+                                "source":  {
+                                               "runId":  "dev",
+                                               "artifact":  "_workflow/runs/dev/handoff.md",
+                                               "conversation":  "workflow"
+                                           },
+                                "createdAt":  "2026-06-16T05:57:51+01:00",
+                                "updatedAt":  "2026-06-16T05:57:51+01:00",
+                                "supersedes":  [
+
+                                               ],
+                                "history":  [
+
+                                            ]
+                            }
+                        ],
+    "custom":  {
+
+               },
+    "changeLog":  [
+                      {
+                          "timestamp":  "2026-06-14T04:24:48+01:00",
+                          "event":  "intake-and-spec-saved",
+                          "summary":  "Captured the production MVP scope and moved the run to the spec approval gate."
+                      },
+                      {
+                          "timestamp":  "2026-06-14T05:15:32+01:00",
+                          "event":  "task-006-complete",
+                          "summary":  "Completed all public frontend routes and advanced to deployment resilience."
+                      },
+                      {
+                          "timestamp":  "2026-06-14T05:27:03+01:00",
+                          "event":  "workflow-complete",
+                          "summary":  "Completed all approved MVP tasks and final quality gates."
+                      },
+                      {
+                          "timestamp":  "2026-06-14T15:48:40+01:00",
+                          "event":  "continuation-reconciled",
+                          "summary":  "Confirmed the workflow is complete, superseded stale run-history states, and recorded that credentialed deployment smoke cannot run without external configuration."
+                      },
+                      {
+                          "timestamp":  "2026-06-14T17:50:11+01:00",
+                          "event":  "credential-free-deployment-smoke",
+                          "summary":  "Verified production and worker fail-closed behavior, local HTTP fallback behavior, full tests/lint/build, and Heroku authentication without creating or linking a deployment target."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T05:57:51+01:00",
+                          "event":  "fixture-team-resolution-spec-saved",
+                          "summary":  "Saved the spec for resolving fixture team names/logos and moved the run to the approval gate."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:08:00+01:00",
+                          "event":  "fixture-team-resolution-plan-saved",
+                          "summary":  "User approved the spec and the vertical task plan was saved."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:18:00+01:00",
+                          "event":  "fixture-team-resolution-task-001-complete",
+                          "summary":  "Completed fixture participant extraction, Team upsert, and sync logging."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:28:00+01:00",
+                          "event":  "fixture-team-resolution-task-002-complete",
+                          "summary":  "Completed fixture/match API team enrichment."
+                      },
+                      {
+                          "timestamp":  "2026-06-16T06:38:00+01:00",
+                          "event":  "fixture-team-resolution-task-003-complete",
+                          "summary":  "Completed fixture-card team name and logo display."
+                      }
+                  ]
 }

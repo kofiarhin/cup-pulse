@@ -172,6 +172,49 @@ test("fixture normalizer converts provider score arrays to home and away totals"
   assert.deepEqual(normalized.match.score, { home: 2, away: 1 });
 });
 
+test("fixture normalizer extracts participant team names and logos", () => {
+  const normalized = normalizeFixture({
+    id: 102,
+    starting_at: "2026-06-20T19:00:00.000Z",
+    state: { short_name: "NS" },
+    participants: [
+      {
+        id: 2447,
+        name: "FC Copenhagen",
+        image_path: "https://cdn.example/fck.png",
+        meta: { location: "home" },
+      },
+      {
+        id: 1789,
+        name: "Brondby",
+        image_path: "https://cdn.example/brondby.png",
+        meta: { location: "away" },
+      },
+    ],
+  }, "fifa-world-cup-2026");
+
+  assert.equal(normalized.fixture.homeTeamId, "team-2447");
+  assert.equal(normalized.fixture.homeTeamName, "FC Copenhagen");
+  assert.equal(normalized.fixture.homeTeamLogo, "https://cdn.example/fck.png");
+  assert.equal(normalized.match.awayTeamName, "Brondby");
+  assert.equal(normalized.match.awayTeamLogo, "https://cdn.example/brondby.png");
+  assert.deepEqual(
+    normalized.teams.map(({ id, name, crestUrl }) => ({ id, name, crestUrl })),
+    [
+      {
+        id: "team-2447",
+        name: "FC Copenhagen",
+        crestUrl: "https://cdn.example/fck.png",
+      },
+      {
+        id: "team-1789",
+        name: "Brondby",
+        crestUrl: "https://cdn.example/brondby.png",
+      },
+    ],
+  );
+});
+
 test("MongoDB lock service prevents duplicate active job claims", async () => {
   const active = new Map();
   const lockModel = {
@@ -416,5 +459,74 @@ test("fixture synchronization logs start, fetched count, and upsert counts", asy
     logs.find((log) => log.message === "Fixture sync upserted records")
       .details,
     { job: "fixtures", fixtures: 2, matches: 2 },
+  );
+});
+
+test("fixture synchronization upserts participant teams and logs team counts", async () => {
+  const logs = [];
+  const fixtureWrites = [];
+  const matchWrites = [];
+  const teamWrites = [];
+  const sync = createSyncService({
+    client: {
+      async fetchAll() {
+        return [
+          {
+            id: 200,
+            starting_at: "2026-06-20T19:00:00.000Z",
+            state: { short_name: "NS" },
+            participants: [
+              {
+                id: 2447,
+                name: "FC Copenhagen",
+                image_path: "https://cdn.example/fck.png",
+                meta: { location: "home" },
+              },
+              {
+                id: 1789,
+                name: "Brondby",
+                image_path: "https://cdn.example/brondby.png",
+                meta: { location: "away" },
+              },
+            ],
+          },
+        ];
+      },
+    },
+    config: { sportmonksSeasonId: 27897 },
+    logger: {
+      info(message, details) {
+        logs.push({ message, details });
+      },
+      error() {},
+    },
+    models: {
+      Competition: {},
+      Fixture: { async bulkWrite(operations) { fixtureWrites.push(...operations); } },
+      Match: { async bulkWrite(operations) { matchWrites.push(...operations); } },
+      Player: {},
+      Standing: {},
+      SyncState: { async findOneAndUpdate() {} },
+      Team: { async bulkWrite(operations) { teamWrites.push(...operations); } },
+      Venue: {},
+    },
+    async refreshDerived() {},
+  });
+
+  await sync.syncFixtures();
+
+  assert.equal(fixtureWrites[0].updateOne.update.$set.homeTeamName, "FC Copenhagen");
+  assert.equal(matchWrites[0].updateOne.update.$set.awayTeamLogo, "https://cdn.example/brondby.png");
+  assert.deepEqual(
+    teamWrites.map((operation) => operation.updateOne.update.$set.name),
+    ["FC Copenhagen", "Brondby"],
+  );
+  assert.deepEqual(
+    logs.find((log) => log.message === "Fixture sync extracted teams").details,
+    { job: "fixtures", teams: 2 },
+  );
+  assert.deepEqual(
+    logs.find((log) => log.message === "Fixture sync upserted teams").details,
+    { job: "fixtures", teams: 2 },
   );
 });

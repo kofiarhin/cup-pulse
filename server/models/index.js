@@ -80,6 +80,10 @@ const Fixture = createModel("Fixture", "fixtures", {
   startsAt: { type: Date, index: true },
   homeTeamId: { type: String, index: true },
   awayTeamId: { type: String, index: true },
+  homeTeamName: String,
+  awayTeamName: String,
+  homeTeamLogo: String,
+  awayTeamLogo: String,
   venueId: { type: String, index: true },
 });
 
@@ -92,6 +96,10 @@ const Match = createModel("Match", "matches", {
   startsAt: { type: Date, index: true },
   homeTeamId: { type: String, index: true },
   awayTeamId: { type: String, index: true },
+  homeTeamName: String,
+  awayTeamName: String,
+  homeTeamLogo: String,
+  awayTeamLogo: String,
   venueId: { type: String, index: true },
   score: mongoose.Schema.Types.Mixed,
   events: [mongoose.Schema.Types.Mixed],

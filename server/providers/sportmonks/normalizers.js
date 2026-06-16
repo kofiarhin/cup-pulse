@@ -2,6 +2,30 @@ function providerId(prefix, id) {
   return id === undefined || id === null ? null : `${prefix}-${id}`;
 }
 
+function firstPresent(values) {
+  return values.find(Boolean) || null;
+}
+
+function providerDate(value) {
+  return value ? new Date(value) : null;
+}
+
+function nullable(value) {
+  return value || null;
+}
+
+function findParticipant(fixture, location) {
+  return fixture.participants?.find((item) => item.meta?.location === location);
+}
+
+function countryName(country) {
+  return nullable(country && country.name);
+}
+
+function teamValue(team, field) {
+  return nullable(team && team[field]);
+}
+
 function normalizeTeam(team, competitionId) {
   return {
     id: providerId("team", team.id),
@@ -15,6 +39,34 @@ function normalizeTeam(team, competitionId) {
     providerUpdatedAt: team.updated_at ? new Date(team.updated_at) : null,
     syncedAt: new Date(),
   };
+}
+
+function normalizeParticipantTeam(participant, competitionId) {
+  const id = providerId("team", participant.id);
+  const name = firstPresent([
+    participant.name,
+    participant.display_name,
+    participant.common_name,
+  ]);
+  const logo = firstPresent([participant.image_path, participant.logo_path]);
+
+  return {
+    id,
+    providerId: participant.id,
+    competitionId,
+    name,
+    code: participant.short_code || participant.code || null,
+    country: countryName(participant.country),
+    crestUrl: logo,
+    source: "cached",
+    providerUpdatedAt: providerDate(participant.updated_at),
+    syncedAt: new Date(),
+  };
+}
+
+function participantTeam(fixture, location, competitionId) {
+  const participant = findParticipant(fixture, location);
+  return participant ? normalizeParticipantTeam(participant, competitionId) : null;
 }
 
 function normalizePlayer(player, teamId) {
@@ -31,13 +83,6 @@ function normalizePlayer(player, teamId) {
     providerUpdatedAt: player.updated_at ? new Date(player.updated_at) : null,
     syncedAt: new Date(),
   };
-}
-
-function participantId(fixture, location) {
-  const participant = fixture.participants?.find(
-    (item) => item.meta?.location === location,
-  );
-  return providerId("team", participant?.id);
 }
 
 function normalizeDate(value) {
@@ -87,22 +132,25 @@ function normalizeScore(scores) {
 
 function normalizeFixture(fixture, competitionId) {
   const startsAt = normalizeDate(fixture.starting_at);
+  const homeTeam = participantTeam(fixture, "home", competitionId);
+  const awayTeam = participantTeam(fixture, "away", competitionId);
+  const providerUpdatedAt = providerDate(fixture.updated_at);
+  const venueId = providerId("venue", firstPresent([fixture.venue_id, fixture.venue?.id]));
   const base = {
     id: providerId("fixture", fixture.id),
     providerId: fixture.id,
-    competitionId:
-      competitionId || providerId("competition", fixture.league_id),
+    competitionId: firstPresent([
+      competitionId,
+      providerId("competition", fixture.league_id),
+    ]),
     stage: fixture.stage?.name || null,
     group: fixture.group?.name || null,
     status: normalizeStatus(fixture.state),
     startsAt,
-    homeTeamId: participantId(fixture, "home"),
-    awayTeamId: participantId(fixture, "away"),
-    venueId: providerId("venue", fixture.venue_id || fixture.venue?.id),
+    ...fixtureTeamFields(homeTeam, awayTeam),
+    venueId,
     source: "cached",
-    providerUpdatedAt: fixture.updated_at
-      ? new Date(fixture.updated_at)
-      : null,
+    providerUpdatedAt,
     syncedAt: new Date(),
   };
 
@@ -116,6 +164,18 @@ function normalizeFixture(fixture, competitionId) {
       statistics: fixture.statistics || {},
       lineups: fixture.lineups || {},
     },
+    teams: [homeTeam, awayTeam].filter((team) => team?.id && team?.name),
+  };
+}
+
+function fixtureTeamFields(homeTeam, awayTeam) {
+  return {
+    homeTeamId: teamValue(homeTeam, "id"),
+    awayTeamId: teamValue(awayTeam, "id"),
+    homeTeamName: teamValue(homeTeam, "name"),
+    awayTeamName: teamValue(awayTeam, "name"),
+    homeTeamLogo: teamValue(homeTeam, "crestUrl"),
+    awayTeamLogo: teamValue(awayTeam, "crestUrl"),
   };
 }
 
@@ -155,7 +215,6 @@ function normalizeVenue(venue) {
 module.exports = {
   normalizeFixture,
   normalizePlayer,
-  normalizeScore,
   normalizeStanding,
   normalizeTeam,
   normalizeVenue,

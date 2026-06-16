@@ -66,3 +66,30 @@ Diff matches the saved spec plus the discovered in-scope persistence blocker. No
 ## Next Recommended Work
 
 Commit and deploy the worker fix, then monitor the next scheduled worker run in production.
+
+## Fixture Team Name Resolution - 2026-06-16
+
+### Completed
+
+- Sportmonks fixture normalization now extracts home and away participant teams.
+- Fixture and Match records now persist `homeTeamName`, `awayTeamName`, `homeTeamLogo`, and `awayTeamLogo`.
+- Fixture sync upserts extracted participant teams and logs fixture/team counts.
+- Fixture and match API responses now include populated `homeTeam` and `awayTeam` objects.
+- Fixture cards render real team names and logos when available, with existing fallback behavior preserved.
+
+### Verification
+
+- `npm run verify`: passed.
+- Fallow new-code gate: passed.
+- API smoke against `http://localhost:5000/api/v1/fixtures?limit=4`: returned real names and logos for the first four fixtures.
+
+### Acceptance
+
+- [x] Upcoming fixtures show real club names.
+- [x] Fixture cards no longer depend on `team-XXXX` when participant names are available.
+- [x] Team logos appear when available.
+- [x] Fixture API returns populated team information.
+
+### Suggested Commit
+
+`fix: resolve fixture team names from Sportmonks participants`

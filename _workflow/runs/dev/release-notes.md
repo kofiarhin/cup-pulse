@@ -1,59 +1,39 @@
-# Release Notes
+# Release Notes: Fixture Team Name Resolution
 
-## Request
-
-Fix Sportmonks fixture sync.
+Date: 2026-06-16
 
 ## User-Facing Changes
 
-- Upcoming fixtures now populate from Sportmonks-backed MongoDB cache after worker sync.
-- `/api/v1/fixtures?limit=4` returns non-empty fixture data after sync.
+- Fixture cards now show real club names from Sportmonks participants instead of fallback IDs such as `team-2447`.
+- Fixture cards show team logos when Sportmonks provides image URLs.
+- The fixture API returns populated `homeTeam` and `awayTeam` objects with `id`, `name`, and `logo`.
 
-## Developer Changes
+## Technical Changes
 
-- Fixture sync now sends Sportmonks `filter=fixtureSeasons:<seasonId>` instead of `filters`.
-- Sportmonks request logs show endpoint and sanitized params without `api_token`.
-- Fixture sync logs start, fetched count, upsert counts, and full failure messages.
-- Job locks and sync states now set stable `id` values to satisfy the shared model schema and avoid duplicate `id: null` failures.
-- Tests cover query serialization, sync parameter usage, diagnostics, failure logging, and lock/sync-state IDs.
+- Fixture normalization extracts home and away participant teams from Sportmonks fixture payloads.
+- Fixture and match documents now store home/away team display names and logos.
+- Fixture sync upserts participant teams into the Team collection.
+- Fixture sync logs fixtures fetched, teams extracted, and teams upserted.
+- API serializers enrich fixture and match responses from stored fixture fields and cached Team records.
+- Fallback behavior remains in place when a team name is unavailable.
 
-## New Routes/APIs
+## Database Impact
 
-None.
+Adds optional display fields to Fixture and Match records:
 
-## New Env Vars
+- `homeTeamName`
+- `awayTeamName`
+- `homeTeamLogo`
+- `awayTeamLogo`
 
-None.
+Team upserts are additive and use existing provider IDs.
 
-## Database/Schema Changes
+## Verification
 
-No schema migration. Worker writes now include required `id` values for `joblocks` and `syncstates`.
+- `npm run verify`: passed.
+- Fallow new-code gate: passed.
+- Local API smoke for `GET /api/v1/fixtures?limit=4`: passed with real names and logos.
 
-## Dependencies Added/Removed
+## Suggested Commit
 
-None.
-
-## Test Commands Run
-
-- `npm test`
-- `npm test --prefix client`
-- `node --check server/providers/sportmonks/client.js`
-- `node --check server/sync/syncService.js`
-- `node --check server/sync/lockService.js`
-- `node --check server/tests/worker.test.js`
-- `git diff --check`
-- `npx fallow audit --format json --quiet --explain`
-
-## Known Limitations
-
-- Direct foreground `npm run worker` is a long-running worker process and hit the tool timeout; redirected logs verified the worker entrypoint and fixture sync.
-- Inherited Sportmonks client request complexity remains for a future cleanup.
-
-## Follow-Up Work
-
-- Consider a dedicated one-shot worker command for operational smoke tests.
-- Consider refactoring `server/providers/sportmonks/client.js` request internals separately.
-
-## Suggested Commit Message
-
-`fix: sync Sportmonks fixtures with singular filter`
+`fix: resolve fixture team names from Sportmonks participants`
