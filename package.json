@@ -8,7 +8,6 @@
     "test:client": "npm test --prefix client",
     "test:all": "npm test && npm run test:client",
     "lint": "npm run lint --prefix client",
-    "build": "npm run build --prefix client",
     "verify": "npm run test:all && npm run lint && npm run build",
     "start": "node server/server.js",
     "worker": "node server/worker.js",
