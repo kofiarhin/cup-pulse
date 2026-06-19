@@ -59,6 +59,37 @@ function fixtureInclude(detailed) {
   return "participants;venue;state;stage;group;scores";
 }
 
+function playerProviderId(player) {
+  return player?.player?.id || player?.participant?.id || player?.id || player?.player_id || player?.playerId;
+}
+
+function playerHasDisplayData(player) {
+  return Boolean(
+    player?.player?.display_name ||
+      player?.player?.common_name ||
+      player?.player?.name ||
+      player?.display_name ||
+      player?.common_name ||
+      player?.name ||
+      player?.position?.name ||
+      player?.detailedPosition?.name ||
+      player?.position_name,
+  );
+}
+
+function mergeHydratedPlayer(player, profile) {
+  if (!profile) return player;
+  return {
+    ...player,
+    player: {
+      ...(player.player || {}),
+      ...profile,
+    },
+    position: player.position || profile.position,
+    detailedPosition: player.detailedPosition || profile.detailedPosition,
+  };
+}
+
 function createSyncService({
   client,
   config,
@@ -138,6 +169,38 @@ function createSyncService({
     return fixtures;
   }
 
+  async function hydratePlayerProfile(player) {
+    if (playerHasDisplayData(player)) return player;
+    const id = playerProviderId(player);
+    if (!id) return player;
+
+    try {
+      const profile = await client.fetchOne(`/players/${id}`, {
+        include: "position;detailedPosition",
+      });
+      return mergeHydratedPlayer(player, profile);
+    } catch (error) {
+      log.error("Player profile hydration failed", {
+        playerId: id,
+        error: error.message,
+      });
+      return player;
+    }
+  }
+
+  async function normalizeTeamPlayers(teams) {
+    const normalized = [];
+
+    for (const team of teams) {
+      for (const player of team.players || []) {
+        const hydrated = await hydratePlayerProfile(player);
+        normalized.push(normalizePlayer(hydrated, `team-${team.id}`));
+      }
+    }
+
+    return normalized;
+  }
+
   async function upsertFixturesAndMatches(job, normalized) {
     const fixturesUpserted = await upsertMany(
       Fixture,
@@ -205,14 +268,7 @@ function createSyncService({
         Team,
         teams.map((team) => normalizeTeam(team, competitionId)),
       );
-      await upsertMany(
-        Player,
-        teams.flatMap((team) =>
-          (team.players || []).map((player) =>
-            normalizePlayer(player, `team-${team.id}`),
-          ),
-        ),
-      );
+      await upsertMany(Player, await normalizeTeamPlayers(teams));
       const standings = await client.fetchAll(
         `/standings/seasons/${config.sportmonksSeasonId}`,
         { include: "participant;group;details" },
