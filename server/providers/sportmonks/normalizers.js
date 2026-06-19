@@ -70,32 +70,49 @@ function participantTeam(fixture, location, competitionId) {
 }
 
 function unwrapPlayer(player) {
-  return player?.player || player?.participant || player;
+  return player?.player || player?.participant || player?.person || player;
 }
 
-function playerName(player) {
+function fullName(record) {
+  return [record?.firstname, record?.lastname].filter(Boolean).join(" ").trim();
+}
+
+function playerName(profile, wrapper) {
   return firstPresent([
-    player.display_name,
-    player.common_name,
-    player.name,
-    [player.firstname, player.lastname].filter(Boolean).join(" ").trim(),
+    profile.display_name,
+    wrapper.display_name,
+    profile.common_name,
+    wrapper.common_name,
+    profile.name,
+    wrapper.name,
+    fullName(profile),
+    fullName(wrapper),
   ]);
 }
 
-function playerPosition(player, wrapper) {
+function playerPosition(profile, wrapper) {
   return firstPresent([
-    player.position?.name,
+    profile.position?.name,
     wrapper.position?.name,
-    player.detailed_position?.name,
+    profile.detailed_position?.name,
     wrapper.detailed_position?.name,
-    player.position_name,
+    profile.detailedPosition?.name,
+    wrapper.detailedPosition?.name,
+    profile.position_name,
     wrapper.position_name,
   ]);
 }
 
 function normalizePlayer(player, teamId) {
   const profile = unwrapPlayer(player) || {};
-  const resolvedId = firstPresent([profile.id, player.player_id, player.playerId]);
+  const resolvedId = firstPresent([
+    profile.id,
+    player.id,
+    player.player_id,
+    player.playerId,
+    player.participant_id,
+    player.participantId,
+  ]);
   const resolvedTeamId = firstPresent([
     teamId,
     providerId("team", player.team_id),
@@ -108,13 +125,13 @@ function normalizePlayer(player, teamId) {
     id: providerId("player", resolvedId),
     providerId: resolvedId,
     teamId: resolvedTeamId,
-    name: playerName(profile),
+    name: playerName(profile, player),
     position: playerPosition(profile, player) || null,
     imageUrl: profile.image_path || player.image_path || null,
     availability: player.sidelined || profile.sidelined ? "unavailable" : "unknown",
     statistics: player.statistics || profile.statistics || {},
     source: "cached",
-    providerUpdatedAt: profile.updated_at ? new Date(profile.updated_at) : null,
+    providerUpdatedAt: providerDate(profile.updated_at || player.updated_at),
     syncedAt: new Date(),
   };
 }
