@@ -69,18 +69,52 @@ function participantTeam(fixture, location, competitionId) {
   return participant ? normalizeParticipantTeam(participant, competitionId) : null;
 }
 
+function unwrapPlayer(player) {
+  return player?.player || player?.participant || player;
+}
+
+function playerName(player) {
+  return firstPresent([
+    player.display_name,
+    player.common_name,
+    player.name,
+    [player.firstname, player.lastname].filter(Boolean).join(" ").trim(),
+  ]);
+}
+
+function playerPosition(player, wrapper) {
+  return firstPresent([
+    player.position?.name,
+    wrapper.position?.name,
+    player.detailed_position?.name,
+    wrapper.detailed_position?.name,
+    player.position_name,
+    wrapper.position_name,
+  ]);
+}
+
 function normalizePlayer(player, teamId) {
-  return {
-    id: providerId("player", player.id),
-    providerId: player.id,
+  const profile = unwrapPlayer(player) || {};
+  const resolvedId = firstPresent([profile.id, player.player_id, player.playerId]);
+  const resolvedTeamId = firstPresent([
     teamId,
-    name: player.display_name || player.common_name || player.name,
-    position: player.position?.name || player.position_name || null,
-    imageUrl: player.image_path || null,
-    availability: player.sidelined ? "unavailable" : "unknown",
-    statistics: player.statistics || {},
+    providerId("team", player.team_id),
+    providerId("team", player.teamId),
+    providerId("team", profile.team_id),
+    providerId("team", profile.teamId),
+  ]);
+
+  return {
+    id: providerId("player", resolvedId),
+    providerId: resolvedId,
+    teamId: resolvedTeamId,
+    name: playerName(profile),
+    position: playerPosition(profile, player) || null,
+    imageUrl: profile.image_path || player.image_path || null,
+    availability: player.sidelined || profile.sidelined ? "unavailable" : "unknown",
+    statistics: player.statistics || profile.statistics || {},
     source: "cached",
-    providerUpdatedAt: player.updated_at ? new Date(player.updated_at) : null,
+    providerUpdatedAt: profile.updated_at ? new Date(profile.updated_at) : null,
     syncedAt: new Date(),
   };
 }
