@@ -26,6 +26,25 @@ test("normalizePlayer reads nested Sportmonks team player payloads", () => {
   assert.equal(player.imageUrl, "https://cdn.example/player.png");
 });
 
+test("normalizePlayer falls back to wrapper fields when the profile include is incomplete", () => {
+  const player = normalizePlayer(
+    {
+      id: 88,
+      display_name: "Wrapper Player",
+      position: { name: "Forward" },
+      player: {
+        id: 88,
+      },
+    },
+    "team-273",
+  );
+
+  assert.equal(player.id, "player-88");
+  assert.equal(player.teamId, "team-273");
+  assert.equal(player.name, "Wrapper Player");
+  assert.equal(player.position, "Forward");
+});
+
 test("normalizePlayer still supports flat player payloads", () => {
   const player = normalizePlayer(
     {
