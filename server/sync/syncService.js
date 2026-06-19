@@ -199,7 +199,7 @@ function createSyncService({
     return track("core", async () => {
       const teams = await client.fetchAll(
         `/teams/seasons/${config.sportmonksSeasonId}`,
-        { include: "country;venue;players;sidelined;statistics" },
+        { include: "country;venue;players.player;players.position;players.detailedPosition;sidelined;statistics" },
       );
       await upsertMany(
         Team,
