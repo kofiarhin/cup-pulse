@@ -1,208 +1,85 @@
-# Task Plan: Fix Fixture Team Name Resolution
+# Task Plan: Player Hydration Guard Fix
 
 - Spec file used: `_workflow/runs/dev/spec.md`
-- Planning date: 2026-06-16
-- Spec approval: approved by user prompt `approve spec`
-- Progress file read: `_workflow/runs/dev/progress.md`
-- Summary file read: `_workflow/runs/dev/summary.md`
-- Handoff file read: `_workflow/runs/dev/handoff.md`
-- Detailed spec sections used: 5 Current State Analysis, 11 Affected Surfaces, 12 Dependency And Integration Map, 13 Data And State Impact, 14 UX / API / Workflow Expectations, 15 Execution Strategy, 16 Verification Strategy, 17 Acceptance Criteria, 18 Edge Cases And Failure Modes, 19 Risks And Mitigations, 20 Assumptions, 22 Task Extraction Notes.
+- Planning date: 2026-06-19
+- Approval: user explicitly approved spec with "approve spec"
+- Progress and summary files read: `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/summary.md`
+- Detailed spec sections used: 5 Current State Analysis, 6 Desired End State, 11 Affected Surfaces, 12 Dependency And Integration Map, 15 Execution Strategy, 16 Verification Strategy, 17 Acceptance Criteria, 18 Edge Cases And Failure Modes, 19 Risks And Mitigations, 22 Task Extraction Notes.
 
-## Task List
+## TASK-001: Hydrate unnamed team roster players during core sync
 
-### TASK-001: Store fixture participant team details
-
+- Task ID: TASK-001
 - Status: Done
-- Objective: Extract home/away participant names and logos from Sportmonks fixtures, persist them on Fixture/Match records, upsert Team records from fixture participants, and log fetched/extracted/upserted counts.
-- Files likely affected: `server/providers/sportmonks/normalizers.js`, `server/sync/syncService.js`, `server/models/index.js`, `server/tests/worker.test.js`
+- Objective: Make core sync hydrate player entries that have provider IDs but no real display name, even when they include position metadata.
+- Files affected:
+  - `server/sync/syncService.js`
+  - `server/tests/worker.test.js`
 - Checklist:
-  - [x] Add failing tests for fixture participant name/logo extraction.
-  - [x] Add failing tests for Team upserts and sync team-count logs.
-  - [x] Add optional Fixture/Match fields for home/away names/logos.
-  - [x] Extend normalizer to extract display team data without raw payloads.
-  - [x] Upsert extracted Team records during fixture sync.
-  - [x] Preserve fallback behavior when names are missing.
-- Iteration 1 Build:
-  - Goal: prove participant names/logos are currently discarded.
-  - Changes made: added failing normalizer and sync tests, then persisted `homeTeamName`, `awayTeamName`, `homeTeamLogo`, and `awayTeamLogo` and emitted extracted `teams`.
-  - Test plan: `npm test`.
-  - Red phase evidence: `npm test` failed with `fixture normalizer extracts participant team names and logos` and `fixture synchronization upserts participant teams and logs team counts`; expected `FC Copenhagen` but actual was `undefined`.
-  - Green phase evidence: `npm test` passed with 40 backend tests after normalizer/model/sync changes.
-  - Refactor phase evidence: removed redundant participant ID lookup helper and reran `npm test`; 40 backend tests passed.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed.
-  - Review findings: provider data stays normalized; raw payloads and tokens are not exposed.
-  - Acceptance status: complete for TASK-001.
-  - Remaining issues: API responses and UI display still pending in later tasks.
-  - Next action: TASK-002.
-- Iteration 2 Refine:
-  - Goal: prove extracted teams are upserted and counted in logs.
-  - Changes made: covered team extraction/upsert behavior in the first iteration because it shares the same sync path.
-  - Test plan: `npm test`.
-  - Red phase evidence: the new sync test failed before implementation because fixture writes had no team names and Team bulk writes were absent.
-  - Green phase evidence: `npm test` passed after `upsertFixtureTeams()` deduplicated and upserted extracted participant teams.
-  - Refactor phase evidence: no additional source refactor was needed beyond the normalizer cleanup; backend tests stayed green.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed.
-  - Review findings: Team upserts filter out records without both ID and name, preserving fallback behavior.
-  - Acceptance status: complete for TASK-001.
-  - Remaining issues: API enrichment still pending.
-  - Next action: TASK-002.
-- Iteration 3 Polish:
-  - Goal: verify syntax, token-safe logs, and fallback behavior.
-  - Changes made: ran syntax checks on all TASK-001 changed backend files.
-  - Test plan: `npm test`, targeted `node --check`.
-  - Red phase evidence: not applicable for syntax-only polish; prior Red tests covered the behavior.
-  - Green phase evidence: targeted `node --check` commands passed.
-  - Refactor phase evidence: no additional refactor required.
-  - Test commands run: `node --check server/providers/sportmonks/normalizers.js`; `node --check server/sync/syncService.js`; `node --check server/models/index.js`; `node --check server/tests/worker.test.js`.
-  - Verification command/result: passed.
-  - Review findings: optional schema fields avoid migration risk; logs count teams without credentials.
-  - Acceptance status: complete for TASK-001.
-  - Remaining issues: none for this task.
-  - Next action: TASK-002.
-- Test plan: backend normalizer/sync tests.
-- Red phase evidence: `npm test` failed on the new participant extraction and team-upsert assertions.
-- Green phase evidence: `npm test` passed with 40 backend tests.
-- Refactor phase evidence: normalizer cleanup kept `npm test` green.
-- Test commands run: `npm test`; `node --check server/providers/sportmonks/normalizers.js`; `node --check server/sync/syncService.js`; `node --check server/models/index.js`; `node --check server/tests/worker.test.js`
-- Acceptance criteria:
-  - [x] Fixture participant names/logos are persisted when available.
-  - [x] Team records are upserted from fixture participants.
-  - [x] Fixture sync logs fetched fixtures, teams extracted, and teams upserted.
-  - [x] Missing names still fall back to team IDs.
-- Acceptance result: complete.
-- Verification commands: `npm test`; `node --check server/providers/sportmonks/normalizers.js`; `node --check server/sync/syncService.js`; `node --check server/models/index.js`; `node --check server/tests/worker.test.js`
-- Stop condition: backend tests cannot prove safe sync behavior.
-- Out-of-scope items: API serialization, frontend display.
+  - [x] Add a failing backend sync test for an ID-plus-position player with no name.
+  - [x] Update `playerHasDisplayData()` to check only display-name fields.
+  - [x] Verify hydrated profile data is upserted.
+  - [x] Run backend tests and syntax checks.
+  - [x] Record all iteration evidence and acceptance.
+- Test plan:
+  - Red: `npm test` fails before the guard change because `/players/{id}` is not called.
+  - Green: `npm test` passes after removing position fields from the display-data guard.
+  - Refactor: Run syntax and diff checks for changed backend files.
+- Verification commands:
+  - `npm test`
+  - `node --check server/sync/syncService.js`
+  - `node --check server/tests/worker.test.js`
+  - `git diff --check`
+- Stop condition: Stop with Needs Human Review if the regression cannot be proven, backend tests fail for in-scope reasons that cannot be fixed safely, or verification cannot run.
+- Out-of-scope items: API route changes, frontend changes, schema changes, live Sportmonks credentialed sync.
 
-### TASK-002: Return populated fixture teams from the API
+### Iteration 1 Build
 
-- Status: Done
-- Objective: Enrich fixture and match API responses with `homeTeam` and `awayTeam` objects containing names/logos, while preserving sanitized public output and avoiding N+1 lookups.
-- Files likely affected: `server/services/dataService.js`, `server/tests/api.test.js`
-- Checklist:
-  - [x] Add failing API test for `/api/v1/fixtures` populated teams.
-  - [x] Add fallback test for missing team names.
-  - [x] Batch-load Team records for fixture/match list records when MongoDB is connected.
-  - [x] Enrich detail responses for matches.
-  - [x] Keep provider/internal fields stripped.
-- Iteration 1 Build:
-  - Goal: prove fixture API currently returns IDs without populated team names.
-  - Changes made: added connected-path fixture API test and batched Team enrichment in `dataService`.
-  - Test plan: `npm test`.
-  - Red phase evidence: `npm test` failed because `response.body.data[0].homeTeam` was `undefined`.
-  - Green phase evidence: `npm test` passed with 41 backend tests after adding team enrichment.
-  - Refactor phase evidence: scoped detail enrichment to connected database records so mock fallback does not query Mongoose while disconnected.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed.
-  - Review findings: Team records are batch-loaded once per list; nested team output strips provider fields.
-  - Acceptance status: complete for fixture API list enrichment.
-  - Remaining issues: frontend display pending.
-  - Next action: TASK-003.
-- Iteration 2 Refine:
-  - Goal: cover match list/detail enrichment and fallback sanitization.
-  - Changes made: added match detail fallback test for persisted team display fields.
-  - Test plan: `npm test`.
-  - Red phase evidence: not separately failing because the Iteration 1 implementation already covered the shared detail serializer path; added focused regression coverage immediately afterward.
-  - Green phase evidence: `npm test` passed with 42 backend tests.
-  - Refactor phase evidence: no further refactor required.
-  - Test commands run: `npm test`.
-  - Verification command/result: passed.
-  - Review findings: persisted name/logo fields cover stale or missing Team collection lookups.
-  - Acceptance status: complete.
-  - Remaining issues: frontend display pending.
-  - Next action: TASK-003.
-- Iteration 3 Polish:
-  - Goal: verify performance shape and syntax.
-  - Changes made: ran syntax checks on TASK-002 changed backend files.
-  - Test plan: `npm test`, targeted `node --check`.
-  - Red phase evidence: not applicable for syntax-only polish; behavior Red was captured in Iteration 1.
-  - Green phase evidence: targeted `node --check` commands passed.
-  - Refactor phase evidence: no further refactor required.
-  - Test commands run: `node --check server/services/dataService.js`; `node --check server/tests/api.test.js`.
-  - Verification command/result: passed.
-  - Review findings: enrichment avoids per-record Team queries and does not affect disconnected mock list responses.
-  - Acceptance status: complete.
-  - Remaining issues: none for this task.
-  - Next action: TASK-003.
-- Test plan: backend API tests.
-- Red phase evidence: `npm test` failed because connected `/api/v1/fixtures` returned no `homeTeam`.
-- Green phase evidence: `npm test` passed with 42 backend tests after serializer enrichment and fallback coverage.
-- Refactor phase evidence: connected-only detail enrichment preserved mock fallback behavior.
-- Test commands run: `npm test`; `node --check server/services/dataService.js`; `node --check server/tests/api.test.js`
-- Acceptance criteria:
-  - [x] `/api/v1/fixtures` returns `homeTeam.name` and `awayTeam.name` when known.
-  - [x] `/api/v1/matches` and match detail responses remain compatible and enriched.
-  - [x] Provider/internal fields remain private.
-  - [x] Fallback `team-${id}` appears only when names are unavailable.
-- Acceptance result: complete.
-- Verification commands: `npm test`; `node --check server/services/dataService.js`; `node --check server/tests/api.test.js`
-- Stop condition: API enrichment cannot be verified without unsafe query behavior.
-- Out-of-scope items: fixture sync and frontend UI.
+- Goal: Prove the current guard skips hydration for ID-plus-position players, then make the smallest passing guard change.
+- Changes made: Added `core synchronization hydrates players that only have ids and position data` in `server/tests/worker.test.js`; removed position-field checks from `playerHasDisplayData()`.
+- Test plan: Add focused core-sync regression in `server/tests/worker.test.js`.
+- Red phase evidence: `npm test` failed with `assert.ok(fetchCalls.find((call) => call.path === "/players/77"))`, proving `/players/77` was not requested.
+- Green phase evidence: `npm test` passed with 46 backend tests after the guard became name-only.
+- Refactor phase evidence: No behavior-preserving source refactor was needed; the predicate now matches the requested explicit logic.
+- Test commands run: `npm test` before and after implementation.
+- Verification command/result: `npm test` passed.
+- Review findings: The change is scoped to the guard and does not alter API routes, schema, or provider authentication.
+- Acceptance status: Complete.
+- Remaining issues: None for build.
+- Next action: Refinement verification.
 
-### TASK-003: Display fixture names and logos in match cards
+### Iteration 2 Refine
 
-- Status: Done
-- Objective: Update shared fixture/match cards to render API-provided team names and logos when available, with stable layout and accessible fallbacks.
-- Applied skill: design-taste-frontend
-- Files likely affected: `client/src/components/MatchList.jsx`, `client/src/App.test.jsx`
-- Checklist:
-  - [x] Add failing frontend test for real team names/logos in fixture cards.
-  - [x] Render logos when `homeTeam.logo`, `homeTeamLogo`, `awayTeam.logo`, or `awayTeamLogo` exists.
-  - [x] Keep text fallback order: team object name, persisted name, team ID, To be confirmed.
-  - [x] Avoid broken image/layout shift when logos are missing.
-  - [x] Run client tests, lint, and build.
-- Iteration 1 Build:
-  - Goal: prove card display can render real team names/logos from API shape.
-  - Changes made: added failing route test for populated fixture team names/logos, then added logo rendering to `MatchList`.
-  - Test plan: `npm test --prefix client`.
-  - Red phase evidence: `npm test --prefix client` failed because the expected logo `<img>` was `null`.
-  - Green phase evidence: `npm test --prefix client` passed with 16 tests after adding fixed-size logo slots.
-  - Refactor phase evidence: replaced the small component cleanly after mojibake prevented a targeted patch; behavior stayed scoped.
-  - Test commands run: `npm test --prefix client`.
-  - Verification command/result: passed.
-  - Review findings: names already used API precedence; logo slot adds no new dependency.
-  - Acceptance status: complete for logo/name display.
-  - Remaining issues: none.
-  - Next action: refinement.
-- Iteration 2 Refine:
-  - Goal: validate missing-logo and fallback behavior.
-  - Changes made: added persisted-name/no-logo fallback test.
-  - Test plan: `npm test --prefix client`.
-  - Red phase evidence: no separate failing Red because the Green implementation already satisfied the fallback path; added explicit regression coverage immediately afterward.
-  - Green phase evidence: `npm test --prefix client` passed with 17 tests.
-  - Refactor phase evidence: no further source refactor required.
-  - Test commands run: `npm test --prefix client`.
-  - Verification command/result: passed.
-  - Review findings: missing logos do not render broken image elements.
-  - Acceptance status: complete.
-  - Remaining issues: none.
-  - Next action: polish verification.
-- Iteration 3 Polish:
-  - Goal: final UI quality, lint, build, and full verification.
-  - Changes made: ran client tests, lint, build, full repository verification, `git diff --check`, and localhost API smoke.
-  - Test plan: `npm test --prefix client`, `npm run lint --prefix client`, `npm run build --prefix client`, `npm run verify`.
-  - Red phase evidence: not applicable for polish-only verification; behavior Red was captured in Iteration 1.
-  - Green phase evidence: full verification and API smoke passed.
-  - Refactor phase evidence: no further refactor required.
-  - Test commands run: `npm test --prefix client`; `npm run lint --prefix client`; `npm run build --prefix client`; `npm run verify`; `git diff --check`; `Invoke-RestMethod http://localhost:5000/api/v1/fixtures?limit=4`.
-  - Verification command/result: passed; API smoke returned real team names and logos.
-  - Review findings: Applied skill: design-taste-frontend; Browser connector unavailable, automated UI route tests/lint/build used as fallback.
-  - Acceptance status: complete.
-  - Remaining issues: none.
-  - Next action: final review.
-- Test plan: frontend route/component tests plus full repository verification.
-- Red phase evidence: `npm test --prefix client` failed because expected fixture logo images were absent.
-- Green phase evidence: client tests passed with 17 tests after rendering logo slots and fallback coverage.
-- Refactor phase evidence: full repository verification passed after scoped component cleanup.
-- Test commands run: `npm test --prefix client`; `npm run lint --prefix client`; `npm run build --prefix client`; `npm run verify`; `git diff --check`; local API smoke.
-- Acceptance criteria:
-  - [x] Upcoming fixture cards display real names.
-  - [x] Fixture cards show logos when available.
-  - [x] No card shows `team-XXXX` when a name exists.
-  - [x] UI remains responsive and accessible.
-- Acceptance result: complete.
-- Verification commands: `npm test --prefix client`; `npm run lint --prefix client`; `npm run build --prefix client`; `npm run verify`; `git diff --check`
-- Stop condition: frontend tests/build cannot verify the display change.
-- Out-of-scope items: broad redesign, new dependencies, animation-heavy changes.
+- Goal: Confirm existing sync behavior remains stable and the new test proves hydrated upsert output.
+- Changes made: No additional source changes; reviewed test assertions for provider path, include parameters, and upserted name.
+- Test plan: Re-run backend tests and inspect regression coverage for over-scoped behavior.
+- Red phase evidence: Covered by Iteration 1 Red; no additional failing test was needed because the refinement did not change behavior.
+- Green phase evidence: The passing regression asserts `/players/77`, `include: "position;detailedPosition"`, and player upsert `name: "Hydrated Player"`.
+- Refactor phase evidence: No further refactor required.
+- Test commands run: `npm test`.
+- Verification command/result: `npm test` passed with 46 tests.
+- Review findings: Named-player skip behavior remains represented by the name-only predicate; no unnecessary hydration logic was added.
+- Acceptance status: Complete.
+- Remaining issues: None.
+- Next action: Polish verification.
+
+### Iteration 3 Polish
+
+- Goal: Run syntax/diff checks and final task review.
+- Changes made: Ran targeted syntax checks, diff check, final diff audit, and Fallow audit.
+- Test plan: Syntax checks, backend tests, diff check, Fallow audit.
+- Red phase evidence: Not applicable for syntax-only polish; behavior Red was captured in Iteration 1.
+- Green phase evidence: Syntax checks passed; `git diff --check` passed with line-ending warnings only; Fallow verdict was `pass`.
+- Refactor phase evidence: No further refactor required after review.
+- Test commands run: `node --check server/sync/syncService.js`; `node --check server/tests/worker.test.js`; `git diff --check`; `npx fallow audit --format json --quiet --explain`.
+- Verification command/result: Passed.
+- Review findings: Final diff matches the saved spec; no token, `.env`, schema, route, or frontend changes were introduced.
+- Acceptance status: Complete.
+- Remaining issues: None blocking.
+- Next action: Final artifacts.
+
+## Acceptance Criteria
+
+- [x] `playerHasDisplayData()` considers only `display_name`, `common_name`, and `name` on `player.player` or the wrapper.
+- [x] Core sync calls `/players/{id}` for a player entry that has an ID and position metadata but no real name.
+- [x] Hydrated profile data is merged before `normalizePlayer()` and the resulting upsert contains a real player name.
+- [x] Existing backend tests pass.

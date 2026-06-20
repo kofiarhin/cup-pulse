@@ -1,38 +1,30 @@
-# Verification: Fixture Team Name Resolution
+# Verification: Player Hydration Guard Fix
 
-Date: 2026-06-16
+## Commands Run
 
-## Automated Checks
+- `npm test`
+  - Red result: failed as expected before implementation because `/players/77` was not requested.
+  - Green result: passed after implementation with 46 backend tests.
+- `node --check server/sync/syncService.js`
+  - Result: passed.
+- `node --check server/tests/worker.test.js`
+  - Result: passed.
+- `git diff --check`
+  - Result: passed with line-ending warnings only.
+- `git diff --stat`
+  - Result: completed.
+- `git diff`
+  - Result: completed and reviewed.
+- `npx fallow audit --format json --quiet --explain`
+  - Result: passed via `cmd` fallback after PowerShell rejected `||`.
 
-- `npm test`: passed, 42 backend tests.
-- `node --check server/services/dataService.js`: passed.
-- `npm test --prefix client`: passed, 17 frontend tests.
-- `npm run lint --prefix client`: passed.
-- `npm run build --prefix client`: passed.
-- `npm run verify`: passed.
-- `git diff --check`: passed with line-ending warnings only.
-- `cmd /c "npx fallow audit --format json --quiet --explain 2>NUL || exit /b 0"`: Fallow verdict passed.
+## Acceptance Verification
 
-## API Smoke
-
-Started the API with `node server/server.js`, queried `http://localhost:5000/api/v1/fixtures?limit=4`, then stopped the process.
-
-Returned fixtures included populated team names and logos:
-
-- `fixture-19714016`: `Viborg FF` vs `Odense BK`
-- `fixture-19714015`: `AGF` vs `Brondby IF`
-- `fixture-19714014`: `Sonderjyske Fodbold` vs `FC Midtjylland`
-- `fixture-19714013`: `Randers FC` vs `Silkeborg IF`
-
-## Acceptance Evidence
-
-- [x] Upcoming fixture API records return real club names.
-- [x] Fixture cards use populated team names from the API.
-- [x] Team logos render when present.
-- [x] Fallback behavior remains available when names or logos are missing.
-- [x] Fixture sync logs fetched fixture count, extracted team count, and upserted team count.
-- [x] Team records are upserted during fixture sync.
+- [x] Name-only display-data guard verified by source diff.
+- [x] `/players/{id}` hydration verified by backend regression test.
+- [x] Hydrated profile name upsert verified by backend regression test.
+- [x] Existing backend tests pass.
 
 ## Notes
 
-The in-app Browser connector was not available for this run, so UI verification used Vitest, lint, production build, and API smoke evidence.
+No live Sportmonks credentialed sync was run. The provider interaction was verified with a mocked sync client.

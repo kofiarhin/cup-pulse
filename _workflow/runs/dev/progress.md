@@ -387,3 +387,35 @@ No implementation tasks have started. Intake is complete and the workflow is wai
   - [x] UI remains responsive and accessible.
 - Failure recovery: targeted patch failed due mojibake separators; replaced the small component file cleanly and verified.
 - Next: final review, Fallow Quality, release notes, summary, and health check.
+## Player Hydration Guard Fix - TASK-001 - Done
+
+- Lifecycle: Planned -> Ready -> In Progress -> Verified -> Reviewed -> Done
+- Files changed: `server/sync/syncService.js`, `server/tests/worker.test.js`, `_workflow/runs/dev/tasks.md`
+- Iteration 1 Build:
+  - Goal: prove and fix the player hydration guard regression.
+  - Red: `npm test` failed on `core synchronization hydrates players that only have ids and position data` because `/players/77` was not requested.
+  - Green: removed position-field checks from `playerHasDisplayData()`; `npm test` passed with 46 backend tests.
+  - Refactor: no source refactor needed; the predicate now matches the requested name-only logic.
+  - Verification: `npm test` passed.
+  - Review: change is scoped to `server/sync/syncService.js` and does not alter API contracts or schema.
+- Iteration 2 Refine:
+  - Goal: confirm hydrated upsert output and existing sync behavior remain stable.
+  - Red: Iteration 1 Red covered the behavior; no additional behavior change was introduced.
+  - Green: the regression test asserts `/players/77`, `include: "position;detailedPosition"`, and upserted `name: "Hydrated Player"`.
+  - Refactor: no additional refactor required.
+  - Verification: `npm test` passed.
+  - Review: no over-broad hydration or provider credential changes introduced.
+- Iteration 3 Polish:
+  - Goal: syntax, diff, and quality gate verification.
+  - Red: not applicable for syntax-only polish; behavior Red was captured in Iteration 1.
+  - Green: `node --check` passed for changed backend files; `git diff --check` passed with line-ending warnings only; Fallow audit passed.
+  - Refactor: no additional refactor required.
+  - Verification: syntax checks, diff check, final diff audit, and Fallow audit passed.
+  - Review: final diff matches the saved spec and no unrelated source files were changed.
+- Acceptance:
+  - [x] `playerHasDisplayData()` is name-only.
+  - [x] ID-plus-position roster players trigger `/players/{id}` hydration.
+  - [x] Hydrated profile data is upserted with a real name.
+  - [x] Backend tests pass.
+- Failure recovery: first Fallow command failed because this PowerShell version does not parse `||`; reran through `cmd` with stderr discarded and non-fatal issue exit behavior.
+- Next: workflow complete.

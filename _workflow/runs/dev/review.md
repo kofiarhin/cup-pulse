@@ -1,42 +1,55 @@
-# Final Review: Fixture Team Name Resolution
+# Review: Player Hydration Guard Fix
 
-Date: 2026-06-16
-Spec: `_workflow/runs/dev/spec.md`
-Task plan: `_workflow/runs/dev/tasks.md`
+## Request
 
-## Scope Review
+Fix skipped player hydration during core sync by treating players as hydrated only when a real display name exists.
 
-The implementation matches the approved spec. Sportmonks fixture normalization now reads participant teams, persists fixture/match display fields, upserts Team records from fixture participants, enriches fixture and match API responses, and renders available team logos in fixture cards.
+## Spec And Task Plan
 
-## Files Reviewed
-
-- `server/providers/sportmonks/normalizers.js`
-- `server/sync/syncService.js`
-- `server/models/index.js`
-- `server/services/dataService.js`
-- `server/tests/worker.test.js`
-- `server/tests/api.test.js`
-- `client/src/components/MatchList.jsx`
-- `client/src/App.test.jsx`
+- Spec file used: `_workflow/runs/dev/spec.md`
+- Task plan used: `_workflow/runs/dev/tasks.md`
+- Tasks reviewed: TASK-001
 
 ## Findings
 
-- No blocking findings.
-- No unrelated source changes found in the final diff audit.
-- No `.env` files or live tokens were changed.
-- `git diff --check` reported only repository line-ending warnings, not whitespace errors.
+- No blocking bugs found.
+- The root cause was confirmed: `playerHasDisplayData()` counted position fields as display data, so unnamed roster player wrappers could bypass `hydratePlayerProfile()`.
+- The fix removes position and detailed-position fields from the display-data guard.
+- The new regression test proves core sync calls `/players/77` for an ID-plus-position player and upserts the hydrated profile name.
 
-## Test And Verification Review
+## Iteration Evidence Reviewed
 
-- Backend tests were updated for participant normalization, Team upsert logging, and API team enrichment.
-- Frontend tests were updated for populated team names/logos and persisted team-name fallback behavior.
-- Full verification passed with `npm run verify`.
-- Local API smoke passed after starting `node server/server.js` temporarily and querying `http://localhost:5000/api/v1/fixtures?limit=4`.
+- Iteration 1 Build: Red test failed before implementation; Green backend tests passed after the guard fix.
+- Iteration 2 Refine: Passing regression assertions cover provider path, include parameter, and upserted name.
+- Iteration 3 Polish: Syntax checks, diff check, Fallow audit, and final diff audit completed.
 
-## Diff Audit
+## TDD Evidence
 
-`git diff --stat` showed 19 changed files covering source, tests, and workflow artifacts. The diff is consistent with the saved spec and approved task plan.
+- Red: `npm test` failed because `/players/77` was not requested.
+- Green: `npm test` passed with 46 tests after the guard update.
+- Refactor: No source refactor required; syntax checks passed.
 
-## Verdict
+## Final Diff Audit
 
-Passed. The request is complete and verified.
+- `git diff --stat`: source changes are limited to `server/sync/syncService.js` and `server/tests/worker.test.js`, plus run workflow artifacts.
+- `git diff`: matches the saved spec.
+- Unrelated files touched: none in source.
+- Tests added or updated: yes, backend sync regression added.
+- Scope creep: none.
+- Generated junk/temporary files: none.
+- Sensitive values/secrets: none.
+- `git diff --check`: passed with line-ending warnings only.
+
+## Missing Tests
+
+None blocking for this scope. A future enhancement could add isolated unit exports for `playerHasDisplayData()`, but the current behavior is proven through the public sync service path.
+
+## Security And Architecture
+
+- No credentials or raw Sportmonks payloads were exposed.
+- No database schema, API route, frontend, or dependency changes were introduced.
+- Fallow audit verdict: pass, with inherited non-blocking complexity findings in `server/sync/syncService.js`.
+
+## Final Review Verdict
+
+Passed.

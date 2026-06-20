@@ -1,17 +1,33 @@
-Fix team name resolution in CupPulse.
+# Active Request: Player Hydration During Sync
 
-Current state:
-- Sportmonks fixture sync works.
-- Fixtures are stored in MongoDB.
-- API `/api/v1/fixtures` returns records.
-- Frontend displays fixtures.
-- Team names are rendering as fallback values like `team-2447`, `team-1789`, and `team-2905` instead of real club names.
+Investigate and fix why player hydration is not occurring during sync.
 
-Goal:
-Display actual team names from Sportmonks.
+Context:
+- Core sync completes successfully.
+- `/api/v1/players?teamId=team-284&limit=5` returns players with valid IDs, `name: null`, `position: null`, and empty statistics.
+- Direct SportMonks sync logs show `/teams/seasons/27897` and `/standings/seasons/27897`.
+- No `/players/{id}` requests appear in logs.
+- `hydratePlayerProfile()` exists in `server/sync/syncService.js`.
+- The sync loop calls `const hydrated = await hydratePlayerProfile(player);`
+- Current behavior suggests hydration is being skipped because the code incorrectly believes players already contain display data.
 
-Normalized workflow request:
-Fix the Sportmonks fixture ingestion, normalization, persistence, API serialization, and fixture-card presentation so upcoming fixtures expose and display real home/away team names and logos when Sportmonks provides participant data. Preserve `team-${id}` fallback behavior only when no real name is available. Add tests and token-safe sync logs for fetched fixture count, extracted teams, and upserted teams.
+Tasks:
+1. Inspect `server/sync/syncService.js`.
+2. Locate `playerHasDisplayData()`, `hydratePlayerProfile()`, and the sync loop that decides whether hydration should occur.
+3. Determine why players that only contain IDs are being treated as already hydrated.
+4. Update the hydration guard so a player is considered hydrated ONLY if a real display name exists.
 
-Execution mode:
-complete-workflow
+Desired logic:
+
+```js
+function playerHasDisplayData(player) {
+  return Boolean(
+    player?.player?.display_name ||
+    player?.player?.common_name ||
+    player?.player?.name ||
+    player?.display_name ||
+    player?.common_name ||
+    player?.name
+  );
+}
+```

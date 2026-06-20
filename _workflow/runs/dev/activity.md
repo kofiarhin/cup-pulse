@@ -140,3 +140,27 @@ Activity
 - Artifact: updated `_workflow/runs/dev/review.md`, `_workflow/runs/dev/verification.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
 - Checkpoint: saved
 - Next: commit and deploy the fix
+## 2026-06-19T06:34:40+01:00 - Player Hydration Guard Intake
+
+Activity
+- Stage: complete -> spec approval gate
+- Memory: added run-local request context for player hydration guard fix
+- Artifact: updated `_workflow/runs/dev/request.md`, `_workflow/runs/dev/spec.md`, `_workflow/runs/dev/handoff.md`
+- Checkpoint: saved
+- Next: wait for explicit spec approval before task planning and implementation
+## 2026-06-19T06:40:00+01:00 - Player Hydration Task Plan Saved
+
+Activity
+- Stage: spec approval gate -> implementation
+- Memory: updated workflow state after explicit spec approval
+- Artifact: created `_workflow/runs/dev/tasks.md`
+- Checkpoint: saved
+- Next: add Red regression test for player hydration guard
+## 2026-06-19T06:50:00+01:00 - Player Hydration Workflow Complete
+
+Activity
+- Stage: implementation -> complete
+- Memory: updated workflow state and task evidence for player hydration guard fix
+- Artifact: updated `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/review.md`, `_workflow/runs/dev/verification.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
+- Checkpoint: saved
+- Next: run worker core sync in the configured environment if live confirmation is needed

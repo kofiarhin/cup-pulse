@@ -359,6 +359,72 @@ test("fixture synchronization refreshes derived data for changed matches", async
   assert.equal(records.length, 2);
 });
 
+test("core synchronization hydrates players that only have ids and position data", async () => {
+  const fetchCalls = [];
+  const playerWrites = [];
+  const teamWrites = [];
+  const standingWrites = [];
+  const sync = createSyncService({
+    client: {
+      async fetchAll(path, parameters) {
+        fetchCalls.push({ path, parameters });
+        if (path === "/teams/seasons/27897") {
+          return [
+            {
+              id: 284,
+              name: "Canada",
+              players: [
+                {
+                  id: 77,
+                  position: { name: "Forward" },
+                  statistics: {},
+                },
+              ],
+            },
+          ];
+        }
+        if (path === "/standings/seasons/27897") {
+          return [];
+        }
+        throw new Error(`Unexpected fetchAll path: ${path}`);
+      },
+      async fetchOne(path, parameters) {
+        fetchCalls.push({ path, parameters });
+        assert.equal(path, "/players/77");
+        return {
+          id: 77,
+          display_name: "Hydrated Player",
+          position: { name: "Forward" },
+        };
+      },
+    },
+    config: { sportmonksSeasonId: 27897 },
+    logger: silentLogger,
+    models: {
+      Competition: {},
+      Fixture: {},
+      Match: {},
+      Player: { async bulkWrite(operations) { playerWrites.push(...operations); } },
+      Standing: { async bulkWrite(operations) { standingWrites.push(...operations); } },
+      SyncState: { async findOneAndUpdate() {} },
+      Team: { async bulkWrite(operations) { teamWrites.push(...operations); } },
+      Venue: {},
+    },
+    async refreshDerived() {},
+  });
+
+  await sync.syncCore();
+
+  assert.ok(fetchCalls.find((call) => call.path === "/players/77"));
+  assert.equal(
+    fetchCalls.find((call) => call.path === "/players/77").parameters.include,
+    "position;detailedPosition",
+  );
+  assert.equal(playerWrites[0].updateOne.update.$set.name, "Hydrated Player");
+  assert.equal(teamWrites[0].updateOne.update.$set.name, "Canada");
+  assert.equal(standingWrites.length, 0);
+});
+
 test("fixture synchronization logs full failure messages", async () => {
   const logs = [];
   const sync = createSyncService({

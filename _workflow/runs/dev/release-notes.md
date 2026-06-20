@@ -1,39 +1,51 @@
-# Release Notes: Fixture Team Name Resolution
+# Release Notes: Player Hydration Guard Fix
 
-Date: 2026-06-16
+## Request
+
+Fix player hydration during core sync so unnamed roster player entries call `/players/{id}` before normalization.
 
 ## User-Facing Changes
 
-- Fixture cards now show real club names from Sportmonks participants instead of fallback IDs such as `team-2447`.
-- Fixture cards show team logos when Sportmonks provides image URLs.
-- The fixture API returns populated `homeTeam` and `awayTeam` objects with `id`, `name`, and `logo`.
+- Player records populated by future core syncs can now receive real names from Sportmonks player detail profiles instead of remaining `name: null` when roster data only includes IDs and position metadata.
 
-## Technical Changes
+## Developer Changes
 
-- Fixture normalization extracts home and away participant teams from Sportmonks fixture payloads.
-- Fixture and match documents now store home/away team display names and logos.
-- Fixture sync upserts participant teams into the Team collection.
-- Fixture sync logs fixtures fetched, teams extracted, and teams upserted.
-- API serializers enrich fixture and match responses from stored fixture fields and cached Team records.
-- Fallback behavior remains in place when a team name is unavailable.
+- `playerHasDisplayData()` now treats only `display_name`, `common_name`, and `name` as display data.
+- Added backend sync regression coverage for ID-plus-position player hydration.
 
-## Database Impact
+## New Routes/APIs
 
-Adds optional display fields to Fixture and Match records:
+None.
 
-- `homeTeamName`
-- `awayTeamName`
-- `homeTeamLogo`
-- `awayTeamLogo`
+## New Env Vars
 
-Team upserts are additive and use existing provider IDs.
+None.
 
-## Verification
+## Database/Schema Changes
 
-- `npm run verify`: passed.
-- Fallow new-code gate: passed.
-- Local API smoke for `GET /api/v1/fixtures?limit=4`: passed with real names and logos.
+None.
 
-## Suggested Commit
+## Dependencies Added/Removed
 
-`fix: resolve fixture team names from Sportmonks participants`
+None.
+
+## Test Commands Run
+
+- `npm test`
+- `node --check server/sync/syncService.js`
+- `node --check server/tests/worker.test.js`
+- `git diff --check`
+- Fallow audit command via `cmd` fallback.
+
+## Known Limitations
+
+- Existing cached player rows need a future core sync to be updated.
+- Live Sportmonks credentialed sync was not run in this workflow.
+
+## Follow-Up Work
+
+- Consider batching or rate-limit-aware player hydration if provider volume becomes a sync-duration concern.
+
+## Suggested Commit Message
+
+`fix: hydrate unnamed players during core sync`

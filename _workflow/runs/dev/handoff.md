@@ -1,36 +1,26 @@
-# Handoff: Fixture Team Name Resolution
+# Handoff: Player Hydration Guard Fix
 
-Date: 2026-06-16
+Date: 2026-06-19
 Run: `dev`
 Status: Complete
 
 ## Request
 
-Fix CupPulse fixture team-name resolution so Sportmonks fixtures display real home and away club names and logos instead of fallback IDs such as `team-2447`.
+Investigate and fix why player hydration is skipped during core sync when team roster player records contain IDs but no real display names.
 
 ## Completed Work
 
-- Inspected the Sportmonks fixture ingestion path, fixture/match/team models, sync service, normalizers, API serializer, and fixture card rendering.
-- Confirmed fixture sync already requests `include=participants`.
-- Updated fixture normalization to extract participant home/away IDs, names, and logos.
-- Persisted optional fixture/match display fields for team names and logos.
-- Upserted extracted teams during fixture sync.
-- Added sync logging for fixtures fetched, teams extracted, and teams upserted.
-- Enriched fixture and match API responses with `homeTeam` and `awayTeam`.
-- Preserved fallback behavior when team names are unavailable.
-- Rendered team logos in fixture cards when the API provides them.
-- Added backend and frontend tests for the new behavior.
+- Inspected `server/sync/syncService.js`.
+- Located `playerHasDisplayData()`, `hydratePlayerProfile()`, and the `normalizeTeamPlayers()` sync loop.
+- Confirmed the root cause: `playerHasDisplayData()` treated position metadata as display data.
+- Added a backend regression test proving an ID-plus-position player triggers `/players/{id}` hydration.
+- Updated the guard so only real name fields count as display data.
+- Verified hydrated profile data is upserted with a real name.
 
 ## Source Files Changed
 
-- `server/providers/sportmonks/normalizers.js`
 - `server/sync/syncService.js`
-- `server/models/index.js`
-- `server/services/dataService.js`
 - `server/tests/worker.test.js`
-- `server/tests/api.test.js`
-- `client/src/components/MatchList.jsx`
-- `client/src/App.test.jsx`
 
 ## Workflow Artifacts
 
@@ -42,33 +32,40 @@ Fix CupPulse fixture team-name resolution so Sportmonks fixtures display real ho
 - `_workflow/runs/dev/verification.md`
 - `_workflow/runs/dev/release-notes.md`
 - `_workflow/runs/dev/summary.md`
-- `_workflow/runs/dev/health.md`
 - `.workflow/fallow-audit.md`
 
 ## Verification Status
 
-- `npm test`: passed, 42 backend tests.
-- `npm test --prefix client`: passed, 17 frontend tests.
-- `npm run lint --prefix client`: passed.
-- `npm run build --prefix client`: passed.
-- `npm run verify`: passed.
+- `npm test`: passed with 46 backend tests.
+- `node --check server/sync/syncService.js`: passed.
+- `node --check server/tests/worker.test.js`: passed.
 - `git diff --check`: passed with line-ending warnings only.
-- Fallow new-code gate: passed.
-- API smoke for `GET /api/v1/fixtures?limit=4`: passed with real team names and logos.
+- Fallow audit: PASSED.
 
 ## Acceptance Status
 
-- [x] Upcoming fixtures show real club names.
-- [x] No fixture card displays `team-XXXX` when Sportmonks participant names are available.
-- [x] Team logos appear when available.
-- [x] Fixture API returns populated team information.
-- [x] Fallback behavior remains available for missing team names.
-- [x] Fixture sync logs fixture and team counts.
+- [x] `playerHasDisplayData()` returns true only for display-name fields.
+- [x] ID-plus-position roster player entries trigger `/players/{id}` hydration.
+- [x] Hydrated profile data is merged before normalization and upsert.
+- [x] Existing backend tests pass.
 
 ## Remaining Issues
 
-None blocking. Existing records may need the next fixture sync to persist the new display fields, but API enrichment can use cached Team records where available.
+- Existing cached player rows need the next core sync to refresh.
+- Live Sportmonks credentialed sync was not run.
+
+## Token / Resume State
+
+- current phase: complete
+- current task: none
+- current iteration: none
+- last completed safe checkpoint: workflow complete
+- files already changed: source files and workflow artifacts listed above
+- files planned next: none
+- tests already run: `npm test`, syntax checks, `git diff --check`, Fallow audit
+- exact next command/action: optional live worker core sync in configured environment
+- safe to continue automatically: no further workflow work remains
 
 ## Suggested Commit
 
-`fix: resolve fixture team names from Sportmonks participants`
+`fix: hydrate unnamed players during core sync`

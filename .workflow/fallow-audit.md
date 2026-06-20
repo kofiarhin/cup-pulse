@@ -1,46 +1,41 @@
 # Fallow Audit
 
-Date: 2026-06-16
-
 ## Command Run
 
-```bash
-cmd /c "npx fallow audit --format json --quiet --explain 2>NUL || exit /b 0"
-```
+- Initial required command attempt: `npx fallow audit --format json --quiet --explain 2>/dev/null || true`
+- Initial result: PowerShell parser rejected `||`, so the command did not execute.
+- Executed fallback: `cmd /c "npx fallow audit --format json --quiet --explain 2>NUL || exit /b 0"`
 
 ## Summary
 
+- Parsed root kind: `audit`
 - Verdict: `pass`
-- Gate: `new-only`
-- Dead code issues: 0
-- Introduced dead code: 0
-- Introduced complexity findings: 0
-- Introduced duplication groups: 0
-- Inherited complexity findings: 12
-- Inherited duplication groups: 1
+- Changed files count: 8
+- Dead-code issues: 0
+- Duplication clone groups: 0
+- Complexity findings: 3 inherited, 0 introduced
 
 ## Findings
 
-Fallow originally flagged introduced dead-code exports, introduced duplication, and one introduced complexity finding. The implementation was refined until the new-code gate passed.
-
-Remaining findings are inherited and outside the approved scope.
+- No new dead-code findings.
+- No new duplication findings.
+- Inherited complexity findings remain in `server/sync/syncService.js` for `playerHasDisplayData`, `playerProviderId`, and `mergeHydratedPlayer`.
+- The inherited findings are non-blocking for this narrow fix because the changed-code gate passed and backend regression coverage was added for the affected behavior.
 
 ## Fixes Applied
 
-- Removed unused exports from changed modules.
-- Extracted shared test helper data to remove introduced duplication.
-- Split API team serialization into smaller helpers to remove introduced complexity.
-- Kept fixture and match API behavior unchanged while reducing helper complexity.
+None from Fallow.
 
 ## Remaining Exceptions
 
-Inherited complexity and one inherited duplication group remain. They are not introduced by this request and are not blocking this fix.
+- Inherited sync-service complexity remains documented for future cleanup.
+- No auto-fixes were applied.
 
 ## Verification
 
-- `npm test`: passed.
-- `npm run verify`: passed.
-- Fallow rerun after cleanup: passed.
+- Backend tests passed before Fallow.
+- Fallow JSON parsed successfully through the fallback command.
+- Final verdict is consistent with Fallow `verdict: pass`.
 
 ## Verdict
 

@@ -1,163 +1,156 @@
-# Detailed Spec: Fix Fixture Team Name Resolution
+# Detailed Spec: Player Hydration Guard Fix
 
 ## 1. Metadata
 - Spec filename: `_workflow/runs/dev/spec.md`
-- Date: 2026-06-16
-- Request ID / slug: `fix-fixture-team-name-resolution`
-- Request source: latest user prompt synced to `_workflow/runs/dev/request.md`
-- Execution mode: `complete-workflow`
-- Request classification: backend ingestion/API fix with small frontend UI display update
-- Scope level: focused cross-layer bug fix
-- Risk level: medium
+- Date: 2026-06-19
+- Request ID / slug: player-hydration-guard-fix
+- Request source: latest direct user prompt
+- Execution mode: complete-workflow
+- Request classification: backend sync bug fix
+- Scope level: narrow
+- Risk level: low to medium
 
 ## 2. Original Request
-- Raw user request: Fix team name resolution in CupPulse so fixture cards stop showing fallback IDs like `team-2447` and display real Sportmonks team names/logos.
-- Normalized request: Fix Sportmonks fixture ingestion, normalization, persistence, API serialization, and fixture-card presentation so upcoming fixtures expose and display real home/away team names and logos when participant data is available. Preserve fallback behavior only when no name is available.
+- Raw user request: Investigate and fix why player hydration is not occurring during sync; update the hydration guard so a player is considered hydrated only if a real display name exists.
+- Normalized request: Change player sync hydration so roster entries with provider IDs but no display-name fields call `/players/{id}` before normalization, and prove the behavior with backend tests.
 - Source prompt / `<artifact-root>/request.md` reference: `_workflow/runs/dev/request.md`
 
 ## 3. Questions And Answers
 - Questions asked: none
-- Answers received: not applicable
-- Questions skipped: repo inspection answered the blocking questions
+- Answers received: Not applicable
+- Questions skipped: local inspection answered the bug location and intended behavior
 - Remaining open questions: none blocking
 
 ## 4. Problem Definition
-- Problem being solved: Fixture records have team IDs but not real team display data, so the UI renders fallback IDs.
-- Why it matters: Public fixture pages look broken and do not identify the clubs.
-- Current pain point: `/api/v1/fixtures` returns `homeTeamId` / `awayTeamId` but not populated team objects or names.
-- Expected value: Users see recognizable club names and logos in upcoming fixtures.
+- Problem being solved: Core sync stores players with valid IDs but missing names/statistics because profile hydration is skipped.
+- Why it matters: Public player endpoints need real cached player names when Sportmonks exposes them through player detail records.
+- Current pain point: `/api/v1/players?teamId=team-284&limit=5` returns null names and no `/players/{id}` requests appear in sync logs.
+- Expected value: Core sync fetches profile data for player records that lack names, improving player API data after sync.
 
 ## 5. Current State Analysis
-- Existing behavior: `syncFixtures()` fetches fixtures with `include=participants;venue;state;stage;group;scores`; `normalizeFixture()` maps participant IDs only through `participantId()`.
-- Existing architecture/components: Sportmonks client -> sync service -> normalizers -> Mongoose models -> data service -> `/api/v1` routes -> React match list.
-- Existing files/modules likely involved: `server/providers/sportmonks/normalizers.js`, `server/sync/syncService.js`, `server/models/index.js`, `server/services/dataService.js`, `server/tests/worker.test.js`, `server/tests/api.test.js`, `client/src/components/MatchList.jsx`, `client/src/App.test.jsx`.
-- Existing data flow: worker writes normalized fixtures/matches; web API reads MongoDB documents and strips internal fields; frontend uses `homeTeam?.name`, `homeTeamName`, then `homeTeamId`.
-- Existing API/UI/CLI/workflow behavior: fixture API returns normalized envelopes but no team population; UI fallback exposes IDs.
-- Existing tests or verification coverage: worker tests cover fixture include/filter and upsert counts; API tests cover generic envelopes; client tests cover route rendering and fixture search.
+- Existing behavior: `hydratePlayerProfile()` returns the original player when `playerHasDisplayData(player)` is true.
+- Existing architecture/components: `createSyncService()` fetches teams, normalizes teams, normalizes team players, and upserts players through Mongoose models.
+- Existing files/modules likely involved: `server/sync/syncService.js`, `server/tests/worker.test.js`.
+- Existing data flow: `/teams/seasons/{seasonId}` returns teams with `players`; `normalizeTeamPlayers()` hydrates each player when needed; `normalizePlayer()` maps profile/wrapper fields to cached player records.
+- Existing API/UI/CLI/workflow behavior: API reads cached `Player` records; the worker writes them during sync.
+- Existing tests or verification coverage: Backend sync tests exist in `server/tests/worker.test.js`; normalizer tests exist separately.
 
 ## 6. Desired End State
-- Expected final behavior: fixture and match records store and/or return real `homeTeam` and `awayTeam` names and logos when Sportmonks provides them.
-- User-facing outcome: upcoming fixtures render real team names and available crests/logos.
-- Developer-facing outcome: participant extraction and API enrichment are covered by tests and logs.
-- System/workflow outcome: next worker sync backfills fixture/match display fields and Team records.
-- Backward compatibility expectations: existing ID fields remain; fallback behavior remains for missing names.
+- Expected final behavior: `playerHasDisplayData()` only returns true for actual name fields on the profile or wrapper.
+- User-facing outcome: Player API responses can contain names after a core sync when Sportmonks detail profiles provide them.
+- Developer-facing outcome: A regression test catches future guard changes that treat position metadata as display data.
+- System/workflow outcome: Core sync may emit `/players/{id}` provider requests for player entries without names.
+- Backward compatibility expectations: Existing players that already contain names are not refetched unnecessarily; players without IDs remain unchanged.
 
 ## 7. Scope
-- In scope: Sportmonks participant extraction, team upsert from fixture sync, fixture/match model fields for names/logos or equivalent API enrichment, serializers, fixture card logo display, tests, logs.
-- Out of scope: credentials, deployment, provider contract redesign, broad UI redesign, authentication/admin tooling.
-- Non-goals: fabricate missing data, expose raw Sportmonks payloads, migrate existing production data manually.
-- Explicit boundaries: no `.env` edits; no unrelated refactors; no new dependencies unless proven necessary.
+- In scope: Backend sync guard update, focused backend regression test, relevant verification, workflow documentation.
+- Out of scope: Database schema changes, API contract changes, frontend changes, provider credential setup, deployment.
+- Non-goals: Optimizing hydration batching or adding caching/rate limiting.
+- Explicit boundaries: Do not alter player normalization beyond what is necessary for the guard behavior.
 
 ## 8. Users And Use Cases
-- Primary users: public CupPulse visitors browsing fixtures.
-- Secondary users: maintainers checking `/api/v1/fixtures` and worker logs.
-- Main use cases: view upcoming fixtures; confirm which clubs are playing; inspect API output.
-- Edge use cases: participants missing names/logos; cached fixtures before the next sync; Team collection missing a participant.
+- Primary users: CupPulse readers browsing player lists and player detail pages.
+- Secondary users: Developers/operators running the worker sync.
+- Main use cases: Run core sync and populate cached player records with real names when roster data is sparse.
+- Edge use cases: Player entry has ID but no name; player entry has position but no name; player entry has wrapper-level name; player entry has no ID.
 
 ## 9. Functional Requirements
-- Required behaviors: fetch fixtures with participant/team relationship included; extract home/away participant ID, name, and logo; upsert extracted teams; return populated team data from fixture endpoints; show names/logos in fixture cards; preserve fallback.
-- Inputs: Sportmonks fixture participant payloads; MongoDB fixture/match/team records; API query parameters.
-- Outputs: normalized fixture/match records, Team records, API `homeTeam` / `awayTeam` objects, UI display.
-- State changes: Fixture/Match may gain name/logo fields; Team records may be upserted during fixture sync.
-- Error states: missing names/logos fall back without throwing; API remains available if Team lookup misses.
-- Permissions/auth expectations: public read-only API unchanged.
+- Required behaviors: Hydrate player profiles only when no real display name is present; preserve early return when a real display name exists; skip hydration when no provider ID exists.
+- Inputs: Sportmonks team player wrapper objects and player profile objects.
+- Outputs: Normalized player records with hydrated names when available.
+- State changes: Cached `Player` documents may receive non-null names after sync.
+- Error states: Failed profile fetch logs `Player profile hydration failed` and returns the original player.
+- Permissions/auth expectations: Existing Sportmonks client authentication behavior is unchanged.
 
 ## 10. Non-Functional Requirements
-- Performance expectations: list enrichment must avoid per-record database queries when possible.
-- Reliability expectations: sync succeeds with partial participant data.
-- Security/privacy expectations: no token logging; provider IDs remain private in API output.
-- Accessibility expectations: logos need empty decorative alt text or accessible text that does not duplicate nearby names.
-- Maintainability expectations: keep provider shape handling in normalizer/sync boundary; keep API serializer focused.
-- DX expectations: tests clearly document expected Sportmonks participant behavior.
+- Performance expectations: Narrow change only; no new unbounded loops beyond existing per-player hydration loop.
+- Reliability expectations: Profile fetch failures remain non-fatal for core sync.
+- Security/privacy expectations: Do not log tokens or raw provider payloads.
+- Accessibility expectations: Not applicable.
+- Maintainability expectations: Keep predicate simple and aligned with the desired explicit logic.
+- DX expectations: Regression test should clearly describe the ID-plus-position case.
 
 ## 11. Affected Surfaces
-- Files likely affected: `server/providers/sportmonks/normalizers.js`, `server/sync/syncService.js`, `server/models/index.js`, `server/services/dataService.js`, `server/tests/worker.test.js`, `server/tests/api.test.js`, `client/src/components/MatchList.jsx`, `client/src/App.test.jsx`.
-- Directories likely affected: `server/providers/sportmonks`, `server/sync`, `server/services`, `server/tests`, `client/src/components`, `client/src`.
-- UI surfaces: home upcoming fixtures, fixtures page, live/results/match lists if backed by the shared `MatchList`.
-- API routes: `/api/v1/fixtures`, `/api/v1/matches`, `/api/v1/matches/live`, `/api/v1/matches/:id`.
-- Components: `MatchList`, match detail score section if needed.
-- Services: `createDataService()`, sync service.
-- Database/schema: Fixture and Match may add `homeTeamName`, `awayTeamName`, `homeTeamLogo`, `awayTeamLogo`; Team already exists.
-- Config/env vars: none.
-- Tests: backend worker/API tests and frontend route/component tests.
-- Docs: workflow artifacts only unless durable architecture facts change.
+- Files likely affected: `server/sync/syncService.js`, `server/tests/worker.test.js`.
+- Directories likely affected: `server/sync/`, `server/tests/`, `_workflow/runs/dev/`.
+- UI surfaces: Not applicable.
+- API routes: No route code changes; `/api/v1/players` output improves after sync.
+- Components: Not applicable.
+- Services: Sync service only.
+- Database/schema: No schema change.
+- Config/env vars: None.
+- Tests: Backend worker/sync tests.
+- Docs: Workflow artifacts only.
+- Workflow artifacts: request, spec, tasks after approval, progress, handoff, review, verification, release notes, summary.
 
 ## 12. Dependency And Integration Map
-- Internal dependencies: normalizer output feeds Fixture/Match/Team models; data service serializes API responses; frontend reads API shape.
-- External packages/services: Sportmonks Football API v3, MongoDB/Mongoose.
-- Integration points: `/fixtures` Sportmonks include, Team upserts, API list/detail serialization.
-- Ordering constraints: update tests first, then normalizer/sync, then API serializer, then frontend logo display.
-- Migration/setup requirements: next worker sync backfills cached records; no manual migration planned.
+- Internal dependencies: `normalizePlayer()` reads profile/wrapper name and position fields; `upsertMany()` persists normalized players.
+- External packages/services: Sportmonks Football API v3 via existing client.
+- Integration points: `client.fetchOne("/players/{id}", { include: "position;detailedPosition" })`.
+- Ordering constraints: Write failing test first, update predicate, rerun backend tests.
+- Migration/setup requirements: None.
 
 ## 13. Data And State Impact
-- Data models: add optional name/logo fields to Fixture/Match or derive them from Team records and participant data.
-- Database changes: optional schema fields only; existing documents remain valid.
-- State management changes: none in frontend state.
-- Cache/session/local storage impact: none.
-- Backward compatibility impact: API gains fields/objects but keeps existing IDs.
+- Data models: Existing `Player` model is unchanged.
+- Database changes: No schema migration; subsequent sync updates cached records.
+- State management changes: None.
+- Cache/session/local storage impact: None.
+- Backward compatibility impact: Existing API shape remains the same.
 
 ## 14. UX / API / Workflow Expectations
-- UX expectations: fixture cards show real names first, logo images only when available, and fallback IDs only as last resort.
-- API contract expectations: records include `homeTeam: { id, name, logo }` and `awayTeam: { id, name, logo }` or equivalent structure; `homeTeamName` and `awayTeamName` may also be present for compatibility.
-- CLI/workflow behavior: worker logs include fixtures fetched, teams extracted, teams upserted.
-- Error handling expectations: missing participant data does not fail sync or API reads.
-- Empty/loading/success/failure states: existing frontend states remain.
+- UX expectations: Not applicable directly.
+- API contract expectations: Same fields; `name` should be populated when source data exists after sync.
+- CLI/workflow behavior: Worker core sync should request player details for unnamed player entries.
+- Error handling expectations: Hydration errors stay logged and non-fatal.
+- Empty/loading/success/failure states: Not applicable.
 
 ## 15. Execution Strategy
-- Recommended implementation approach: add failing tests for participant name/logo extraction and API enrichment; extend normalizer to produce team display fields and extracted team records; upsert teams inside fixture sync; batch-enrich list/detail API records; update `MatchList` to render logos without layout shift.
-- Suggested sequencing: backend tests/normalization first, sync logging/upsert second, API serialization third, frontend display fourth.
-- Safe rollout/migration approach: optional fields and additive API response keep old documents readable.
-- Files to inspect before editing: affected files listed in section 11 plus `server/data/mockData.js` if API serializer tests use mock fallback.
-- Decisions to avoid until more evidence exists: no provider endpoint changes beyond `include=participants` unless tests/live response prove it insufficient.
+- Recommended implementation approach: Add a test that sets up `syncCore()` with a team player containing an ID and position metadata but no name, assert `/players/{id}` is fetched, and assert the upserted player name comes from the profile. Then remove position fields from `playerHasDisplayData()`.
+- Suggested sequencing: Test Red, guard update Green, syntax/test verification, final review.
+- Safe rollout/migration approach: Deploy code and rerun core sync.
+- Files to inspect before editing: `server/sync/syncService.js`, `server/tests/worker.test.js`, `server/providers/sportmonks/normalizers.js`.
+- Decisions to avoid until more evidence exists: Do not add batching/rate-limit logic as part of this narrow fix.
 
 ## 16. Verification Strategy
-- Required automated checks: `npm test`, `npm test --prefix client`, `npm run lint --prefix client`, `npm run build --prefix client`, `git diff --check`.
-- Required manual checks: if local env is available, `curl http://localhost:5000/api/v1/fixtures?limit=4` and confirm real team names.
-- Test types needed: normalizer unit tests, sync service tests, API serializer tests, frontend component/route tests.
-- Build/lint/typecheck expectations: full repository verification should pass via `npm run verify` where feasible.
-- Acceptance evidence required: sample API output with `homeTeam.name` and `awayTeam.name`, logs proving extracted/upserted teams, test output.
-- Proof of completion: task progress records all three Build/Refine/Polish iterations with TDD evidence.
+- Required automated checks: Targeted backend test command and full backend test command if feasible.
+- Required manual checks: Inspect logged provider paths in test calls; no live credentialed Sportmonks call required.
+- Test types needed: Unit/integration-style sync service test with mocked client/models.
+- Build/lint/typecheck expectations: Node syntax check for changed backend files.
+- Acceptance evidence required: Red failure before guard change when possible; Green pass after update; refactor pass.
+- Proof of completion: Test output plus diff showing name-only guard.
 
 ## 17. Acceptance Criteria
-- [ ] Upcoming fixtures show real club names when Sportmonks participant/team names are available.
-- [ ] No fixture card displays `team-XXXX` when an actual team name exists in synced data.
-- [ ] Team logos appear in fixture cards when available.
-- [ ] `/api/v1/fixtures?limit=4` returns populated `homeTeam` and `awayTeam` names.
-- [ ] Fixture sync logs fixture count, extracted team count, and upserted team count.
-- [ ] Fallback `team-${id}` remains only when a team name is unavailable.
+- [ ] `playerHasDisplayData()` considers only `display_name`, `common_name`, and `name` on `player.player` or the wrapper.
+- [ ] Core sync calls `/players/{id}` for a player entry that has an ID and position metadata but no real name.
+- [ ] Hydrated profile data is merged before `normalizePlayer()` and the resulting upsert contains a real player name.
+- [ ] Existing backend tests pass.
 
 ## 18. Edge Cases And Failure Modes
-- Edge cases: participant order varies; meta location missing; name present but logo missing; Team collection stale; fixture contains neutral/TBD participants.
-- Failure modes: Sportmonks include does not provide names; API enrichment returns provider/internal fields; frontend image breaks; list enrichment becomes inefficient.
-- Regression risks: existing mock fallback tests may need fixtures updated; match detail may still show IDs if only list serializer changes.
-- Recovery expectations: keep fallback IDs and no broken images; log counts without failing the sync for partial data.
+- Edge cases: Nested `player.player.name` exists; wrapper `name` exists; only `position.name` exists; no provider ID exists.
+- Failure modes: Sportmonks profile endpoint fails; test model mocks miss required methods; increased live sync request volume.
+- Regression risks: Accidentally hydrating already named players; accidentally losing position normalization.
+- Recovery expectations: Keep existing catch/log/return-original hydration behavior.
 
 ## 19. Risks And Mitigations
-- Technical risks: Sportmonks participant shape differs from assumptions. Mitigation: mapper supports common `name`, `display_name`, `image_path`, and falls back safely.
-- Product/UX risks: logos absent for some clubs. Mitigation: render names cleanly without logos.
-- Security risks: provider token exposure in logs. Mitigation: preserve sanitized logging pattern.
-- Scope risks: frontend polish expanding beyond fixture cards. Mitigation: touch only shared match list display needed for logos.
-- Mitigation plan: test each boundary and avoid broad refactors.
+- Technical risks: Additional player-detail calls may increase sync duration. Mitigation: restrict hydration only to unnamed players.
+- Product/UX risks: No direct UI risk.
+- Security risks: None expected; do not log secrets.
+- Scope risks: Temptation to rework hydration batching. Mitigation: keep this as a guard-only fix.
+- Mitigation plan: Focused test and no schema/API changes.
 
 ## 20. Assumptions
-- Explicit assumptions: `include=participants` is the correct Sportmonks relationship for fixture teams; participant objects can upsert Teams; current schema can accept optional fields without migration.
-- Confidence level: medium-high based on code inspection and prior successful fixture sync.
-- What to revisit if assumptions are wrong: Sportmonks include relationship or separate team lookup strategy.
+- Explicit assumptions: Position fields are not display data; Sportmonks detail profile has one of the recognized name fields when available.
+- Confidence level: high
+- What to revisit if assumptions are wrong: If detail profiles also omit names, player API null names may be provider-data availability rather than sync guard behavior.
 
 ## 21. Open Questions
-- Blocking questions: none.
-- Non-blocking questions: whether Sportmonks uses a richer relationship than `participants` for club logos in fixture responses.
-- Execution impact: if `participants` lacks logos, names still ship and logos remain optional.
+- Blocking questions: none
+- Non-blocking questions: Whether to add future batching/rate-limit protection for player hydration.
+- Execution impact: None for this narrow fix.
 
 ## 22. Task Extraction Notes
-- Suggested vertical task boundaries: one task for ingestion/persistence, one for API serialization, one for frontend display and verification.
-- Suggested first task: extract and persist fixture participant team display data.
-- Suggested task ordering: ingestion -> API -> frontend/verification.
-- Areas that should not become separate tasks: broad design refresh, deployment, auth, unrelated docs.
-- How the 3-pass Build -> Refine -> Polish loop should apply: each task gets tests first, smallest implementation, cleanup, verification, review, and documented acceptance.
-
-## Spec Approval Gate
-
-This spec is saved at `_workflow/runs/dev/spec.md`.
-
-Approve this spec explicitly before task planning or implementation begins.
+- Suggested vertical task boundaries: One task: fix the player hydration display-data guard and prove sync hydration occurs.
+- Suggested first task: `TASK-001: Hydrate unnamed team roster players during core sync`.
+- Suggested task ordering: Single backend task, then final review/artifacts.
+- Areas that should not become separate tasks: Frontend display, API route changes, schema changes.
+- How the 3-pass Build -> Refine -> Polish loop should apply: Build adds failing regression and minimal guard fix; Refine covers named-player/no-ID behavior if needed; Polish runs syntax/full backend verification and review.

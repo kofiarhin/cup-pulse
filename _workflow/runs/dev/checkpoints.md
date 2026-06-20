@@ -158,3 +158,24 @@ Append a checkpoint at intake completion, spec save, task-plan save, each comple
 - Artifacts changed: `_workflow/runs/dev/review.md`, `_workflow/runs/dev/verification.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`, `_workflow/project-brain/project.json`, `_workflow/project-brain/PROJECT_BRAIN.md`
 - Open questions: none blocking
 - Next action: commit and deploy the fix
+## 2026-06-19T06:34:40+01:00 - Spec Saved: Player Hydration Guard Fix
+
+- Stage: spec approval gate
+- Memory summary: The active request is to fix core sync player hydration by making `playerHasDisplayData()` name-only.
+- Artifacts changed: `_workflow/runs/dev/request.md`, `_workflow/runs/dev/spec.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none blocking
+- Next action: wait for explicit approval, then create `_workflow/runs/dev/tasks.md` and implement the backend guard/test change.
+## 2026-06-19T06:40:00+01:00 - Task Plan Saved: Player Hydration Guard Fix
+
+- Stage: implementation
+- Memory summary: The approved task plan contains one backend task to fix and verify player hydration for unnamed team roster players.
+- Artifacts changed: `_workflow/runs/dev/tasks.md`, `_workflow/runs/dev/activity.md`, `_workflow/runs/dev/checkpoints.md`
+- Open questions: none
+- Next action: add a failing sync regression test before changing `server/sync/syncService.js`.
+## 2026-06-19T06:50:00+01:00 - Workflow Complete: Player Hydration Guard Fix
+
+- Stage: complete
+- Memory summary: The player hydration guard now treats only real name fields as display data and backend tests prove unnamed ID-plus-position players hydrate.
+- Artifacts changed: `_workflow/runs/dev/progress.md`, `_workflow/runs/dev/review.md`, `_workflow/runs/dev/verification.md`, `.workflow/fallow-audit.md`, `_workflow/runs/dev/release-notes.md`, `_workflow/runs/dev/summary.md`, `_workflow/runs/dev/handoff.md`, `_workflow/runs/dev/health.md`
+- Open questions: none blocking
+- Next action: optionally run live worker core sync and confirm `/players/{id}` appears in sanitized request logs.

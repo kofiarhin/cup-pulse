@@ -70,10 +70,7 @@ function playerHasDisplayData(player) {
       player?.player?.name ||
       player?.display_name ||
       player?.common_name ||
-      player?.name ||
-      player?.position?.name ||
-      player?.detailedPosition?.name ||
-      player?.position_name,
+      player?.name,
   );
 }
 
